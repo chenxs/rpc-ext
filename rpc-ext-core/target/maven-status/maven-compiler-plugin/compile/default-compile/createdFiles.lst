@@ -1,8 +1,0 @@
-com/hill/rpc/ext/core/rpcext/dubbo/annotation/RpcInfo.class
-com/hill/rpc/ext/core/rpcext/dubbo/annotation/RpcService.class
-com/hill/rpc/ext/core/rpcext/dubbo/ResetRpcDefinitionMerged.class
-com/hill/rpc/ext/core/rpcext/dubbo/ResetRpcDefinition.class
-com/hill/rpc/ext/core/rpcext/dubbo/configuration/DubboRpcExtConfiguration.class
-com/hill/rpc/ext/core/utils/PackageUtils.class
-com/hill/rpc/ext/core/utils/AnnotationUtils.class
-com/hill/rpc/ext/core/rpcext/dubbo/enums/LoadbalanceType.class

@@ -1,3 +1,0 @@
-# Auto Configure
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.hill.rpc.ext.core.rpcext.dubbo.configuration.DubboRpcExtConfiguration
