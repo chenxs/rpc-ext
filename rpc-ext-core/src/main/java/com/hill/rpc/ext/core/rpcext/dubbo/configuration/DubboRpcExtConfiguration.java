@@ -1,9 +1,11 @@
 package com.hill.rpc.ext.core.rpcext.dubbo.configuration;
 
+import com.alibaba.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor;
 import com.alibaba.dubbo.config.spring.schema.DubboNamespaceHandler;
 import com.hill.rpc.ext.core.rpcext.dubbo.ResetRpcDefinition;
 import com.hill.rpc.ext.core.rpcext.dubbo.ResetRpcDefinitionBeanPostProcessor;
 import com.hill.rpc.ext.core.rpcext.dubbo.ResetSortPostProcessor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,11 +26,15 @@ public class DubboRpcExtConfiguration {
     }
 
     @Bean
+    @ConditionalOnClass({ReferenceAnnotationBeanPostProcessor.class})
+    @ConditionalOnBean(name = {"referenceAnnotationBeanPostProcessor"})
     public ResetRpcDefinitionBeanPostProcessor resetRpcDefinitionBeanPostProcessor(){
         return new ResetRpcDefinitionBeanPostProcessor();
     }
 
     @Bean
+    @ConditionalOnClass({ReferenceAnnotationBeanPostProcessor.class})
+    @ConditionalOnBean(name = {"referenceAnnotationBeanPostProcessor"})
     public ResetSortPostProcessor ResetSortPostProcessor(){
         return new ResetSortPostProcessor();
     }

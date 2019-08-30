@@ -36,7 +36,6 @@ public class ResetRpcDefinition implements BeanFactoryPostProcessor, Application
         Stream.of(beanNames)
                 .map(beanName -> beanFactory.getBeanDefinition(beanName))
                 .forEach(beanDefinition -> {
-                    System.out.println(beanDefinition.getBeanClassName());
                     if (Objects.equals(ReferenceBean.class.getName(),beanDefinition.getBeanClassName())) {
                         MutablePropertyValues mutablePropertyValues = beanDefinition.getPropertyValues();
 

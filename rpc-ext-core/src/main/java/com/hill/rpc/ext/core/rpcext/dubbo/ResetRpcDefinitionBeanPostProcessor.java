@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 public class ResetRpcDefinitionBeanPostProcessor  implements MergedBeanDefinitionPostProcessor,  ApplicationContextAware, PriorityOrdered {
     private ApplicationContext applicationContext;
     private  ConcurrentMap<String, InjectionMetadata> injectionMetadataCache;
+    private StandardEnvironment env;
     private final String injectionMetadataCacheField = "injectionMetadataCache";
     private final String injectedElementsField = "injectedElements";
     private final String referenceField = "reference";
@@ -42,14 +43,13 @@ public class ResetRpcDefinitionBeanPostProcessor  implements MergedBeanDefinitio
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
-        this.injectionMetadataCache = getCacheInjectionMetadata(applicationContext);
     }
     @Override
     public void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
-        StandardEnvironment env = (StandardEnvironment) applicationContext.getBean(ConfigurableApplicationContext.ENVIRONMENT_BEAN_NAME);
+        StandardEnvironment env = getEnv();
         if (beanType != null){
             String cacheKey = getCacheKey(beanName,beanType);
-            InjectionMetadata metadata = injectionMetadataCache.get(cacheKey);
+            InjectionMetadata metadata = getCacheInjectionMetadata().get(cacheKey);
             Collection<InjectionMetadata.InjectedElement> elements = (Collection<InjectionMetadata.InjectedElement>) ReflectUtils.getBeanFieldVal(metadata,injectedElementsField);
             if (elements != null && !elements.isEmpty()){
                 elements.stream().forEach(element -> {
@@ -77,17 +77,28 @@ public class ResetRpcDefinitionBeanPostProcessor  implements MergedBeanDefinitio
         return LOWEST_PRECEDENCE;
     }
 
-    private  ConcurrentMap<String, InjectionMetadata> getCacheInjectionMetadata(ApplicationContext applicationContext){
-        try{
-            ReferenceAnnotationBeanPostProcessor referenceAnnotationBeanPostProcessor = applicationContext.getBean(ReferenceAnnotationBeanPostProcessor.class);
-            return (ConcurrentMap<String, InjectionMetadata>) ReflectUtils.getBeanFieldVal(referenceAnnotationBeanPostProcessor,injectionMetadataCacheField);
-        }catch (Exception e){
-            throw new ResetRpcDefinitionErrorException("get cacheInjectionMetadata error.");
+    private  ConcurrentMap<String, InjectionMetadata> getCacheInjectionMetadata(){
+        if (injectionMetadataCache == null){
+            try{
+                ReferenceAnnotationBeanPostProcessor referenceAnnotationBeanPostProcessor = applicationContext.getBean(ReferenceAnnotationBeanPostProcessor.class);
+                injectionMetadataCache =  (ConcurrentMap<String, InjectionMetadata>) ReflectUtils.getBeanFieldVal(referenceAnnotationBeanPostProcessor,injectionMetadataCacheField);
+            }catch (Exception e){
+                throw new ResetRpcDefinitionErrorException("get cacheInjectionMetadata error.");
+            }
         }
+        return injectionMetadataCache;
+
     }
 
     private String getCacheKey(String beanName,Class clazz){
         return  (StringUtils.hasLength(beanName) ? beanName : clazz.getName());
     }
 
+
+    private StandardEnvironment getEnv(){
+        if (env == null){
+            env = (StandardEnvironment)applicationContext.getBean(ConfigurableApplicationContext.ENVIRONMENT_BEAN_NAME);
+        }
+        return env;
+    }
 }

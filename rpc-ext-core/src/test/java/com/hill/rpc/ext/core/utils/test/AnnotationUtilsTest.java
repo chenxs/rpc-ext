@@ -18,6 +18,11 @@ import org.springframework.util.Assert;
  * @create 2019/8/25 12:02
  */
 public class AnnotationUtilsTest {
+    @Test
+    public void superTest(){
+        boolean flag = new SubClass().isInitialized();
+        System.out.println(flag);
+    }
 
     @Test
     public void recursionGetTest(){

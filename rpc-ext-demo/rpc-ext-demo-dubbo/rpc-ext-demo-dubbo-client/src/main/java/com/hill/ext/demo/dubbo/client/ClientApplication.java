@@ -4,6 +4,7 @@ import com.alibaba.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.annotation.ImportResource;
 
 /**
  * 〈一句话功能简述〉<br>
@@ -13,7 +14,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
  * @create 2019/8/28 19:23
  */
 @SpringBootApplication
-@EnableDubbo
+//@EnableDubbo
+@ImportResource({ "classpath:/dubboConfig.xml"})
 public class ClientApplication{
     public static void main(String[] args) {
         new SpringApplicationBuilder(ClientApplication.class)
