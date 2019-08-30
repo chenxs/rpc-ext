@@ -2,7 +2,9 @@
 build/*
 /build/
 .idea/*
+.idea/workspace.xml
 *.settings
+./**/target
 
 /out/
 /build/
