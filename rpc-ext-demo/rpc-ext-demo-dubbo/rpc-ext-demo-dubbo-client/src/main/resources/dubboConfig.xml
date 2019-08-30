@@ -5,7 +5,7 @@
     http://www.springframework.org/schema/beans/spring-beans.xsd        
     http://code.alibabatech.com/schema/dubbo        
     http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
-
+	<dubbo:application name="dubbo-client"/>
 	<dubbo:registry id="dubbo_registry"
 					address="zookeeper://127.0.0.1:2182"
 					timeout="10000" />
