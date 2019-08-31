@@ -23,10 +23,7 @@ import java.util.stream.Stream;
  * @author hillchen
  * @create 2019/8/25 22:31
  */
-public class ResetRpcDefinition implements BeanFactoryPostProcessor, ApplicationContextAware, Ordered {
-    private final String interfacePropertyName = "interface";
-    private final String urlPropertyName = "url";
-    private final String timeoutPropertyName = "timeout";
+public class XmlReferenceBeanDefinitionReset implements BeanFactoryPostProcessor, ApplicationContextAware, Ordered {
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
@@ -38,22 +35,7 @@ public class ResetRpcDefinition implements BeanFactoryPostProcessor, Application
                 .forEach(beanDefinition -> {
                     if (Objects.equals(ReferenceBean.class.getName(),beanDefinition.getBeanClassName())) {
                         MutablePropertyValues mutablePropertyValues = beanDefinition.getPropertyValues();
-
-                        String interfaceName = mutablePropertyValues.getPropertyValue(interfacePropertyName).getValue().toString();
-                        RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(interfaceName);
-                        if (rpcInfo != null ){
-                            String appName = rpcInfo.appName();
-                            String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName,urlPropertyName);
-                            if (env.containsProperty(rpcUrlResetKey)){
-                                String url = env.getProperty(rpcUrlResetKey);
-                                mutablePropertyValues.removePropertyValue(urlPropertyName);
-                                mutablePropertyValues.add(urlPropertyName,url);
-
-                                // 当存在点对点直连时，所在点对点服务的超时时间为5分钟
-                                mutablePropertyValues.removePropertyValue(timeoutPropertyName);
-                                mutablePropertyValues.add(timeoutPropertyName,1000*60*5);
-                            }
-                        }
+                        RpcInfoContext.resetToDirect(env,mutablePropertyValues);
                     }
                 });
     }

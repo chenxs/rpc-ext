@@ -29,16 +29,12 @@ import java.util.concurrent.ConcurrentMap;
  * @author hillchen
  * @create 2019/8/25 22:31
  */
-public class ResetRpcDefinitionBeanPostProcessor  implements MergedBeanDefinitionPostProcessor,  ApplicationContextAware, PriorityOrdered {
+public class AnnotationReferenceBeanDefinitionReset implements MergedBeanDefinitionPostProcessor,  ApplicationContextAware, PriorityOrdered {
     private ApplicationContext applicationContext;
     private  ConcurrentMap<String, InjectionMetadata> injectionMetadataCache;
     private StandardEnvironment env;
     private final String injectionMetadataCacheField = "injectionMetadataCache";
     private final String injectedElementsField = "injectedElements";
-    private final String referenceField = "reference";
-    private final String urlField = "url";
-    private final String timeoutField = "timeOut";
-    private final String popFieldName = "field";
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -53,20 +49,7 @@ public class ResetRpcDefinitionBeanPostProcessor  implements MergedBeanDefinitio
             Collection<InjectionMetadata.InjectedElement> elements = (Collection<InjectionMetadata.InjectedElement>) ReflectUtils.getBeanFieldVal(metadata,injectedElementsField);
             if (elements != null && !elements.isEmpty()){
                 elements.stream().forEach(element -> {
-                    Object reference = ReflectUtils.getBeanFieldVal(element,referenceField);
-                    Field field = (Field)ReflectUtils.getBeanFieldVal(element,popFieldName);
-                    Class fieldClazz = field.getType();
-                    RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(fieldClazz.getName());
-
-                    if (rpcInfo != null ){
-                        String appName = rpcInfo.appName();
-                        String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName, urlField);
-                        if (env.containsProperty(rpcUrlResetKey)){
-                            String url = env.getProperty(rpcUrlResetKey);
-                            AnnotationUtils.setAnnotationFieldVal(reference,urlField,url);
-                            AnnotationUtils.setAnnotationFieldVal(reference,timeoutField,1000*60*5);
-                        }
-                    }
+                    RpcInfoContext.resetToDirect(env,element);
                 });
             }
         }
