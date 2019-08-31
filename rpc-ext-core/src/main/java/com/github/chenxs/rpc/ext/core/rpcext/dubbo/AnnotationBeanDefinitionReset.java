@@ -97,6 +97,7 @@ public class AnnotationBeanDefinitionReset implements BeanPostProcessor,  Applic
      * @param referenceClass
      */
     private void resetRefer(Reference reference, Class<?> referenceClass) {
+
         if (RpcInfoContext.needResetToDirect(referenceClass,getEnv())){
             String interfaceName;
             if (!"".equals(reference.interfaceName())) {
@@ -144,8 +145,7 @@ public class AnnotationBeanDefinitionReset implements BeanPostProcessor,  Applic
                         referenceConfig.setConsumer((ConsumerConfig) applicationContext.getBean(reference.consumer(), ConsumerConfig.class));
                     }
                     try {
-                        RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(referenceClass);
-                        referenceConfig.setUrl(RpcInfoContext.getDirectUrl(rpcInfo.appName(),getEnv()));
+                        referenceConfig.setUrl(RpcInfoContext.getDirectUrl(referenceClass,getEnv()));
                         referenceConfig.setTimeout(1000*60*5);
                         referenceConfig.afterPropertiesSet();
                     } catch (RuntimeException e) {

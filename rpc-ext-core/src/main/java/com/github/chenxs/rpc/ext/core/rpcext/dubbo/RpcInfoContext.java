@@ -6,9 +6,13 @@ import com.github.chenxs.rpc.ext.core.utils.ReflectUtils;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * 〈一句话功能简述〉<br>
@@ -22,34 +26,16 @@ public class RpcInfoContext {
 
     private static final String appResetPrefix = "rpc.reset";
     private static final String urlPropertyName = "url";
+    private static final String apiPackagePropertyName = "apiPackage";
     private static final String timeoutPropertyName = "timeout";
     private static final String interfacePropertyName = "interface";
     private static final String referenceField = "reference";
     private static final String popFieldName = "field";
+    private static final String apiPackagePattern = "rpc\\.reset\\..+\\.apiPackage" ;
+    private static boolean pkgAppNameMapInitFlag = false;
 
     private static final ConcurrentHashMap<String, RpcInfo> rpcInfoMap = new ConcurrentHashMap<>();
-
-    /**
-     * 获取接口上的RpcInfo注解
-     * @param interfaceName
-     * @return
-     */
-    public static RpcInfo getAppRpcInfo(String interfaceName) {
-        if (rpcInfoMap.containsKey(interfaceName)){
-            return rpcInfoMap.get(interfaceName);
-        }else {
-            RpcInfo rpcInfo = null;
-            try {
-                rpcInfo = AnnotationUtils.recursionGet(interfaceName, RpcInfo.class);
-                if (rpcInfo != null){
-                    rpcInfoMap.putIfAbsent(interfaceName,rpcInfo);
-                }
-            } catch (ClassNotFoundException e) {
-                // 忽略
-            }
-            return rpcInfo;
-        }
-    }
+    private static final ConcurrentHashMap<String, String> pkgAppNameMap = new ConcurrentHashMap<>();
 
     /**
      * 获取接口上的RpcInfo注解
@@ -79,30 +65,30 @@ public class RpcInfoContext {
         return new StringBuilder(appResetPrefix).append(".").append(appName).append(".").append(parameName).toString();
     }
 
-    /**
-     * 直连重置校验
-     * @param referenClazz
-     * @param env
-     * @return
-     */
-    public static boolean needResetToDirect(Class referenClazz, StandardEnvironment env ){
-        RpcInfo rpcInfo = getAppRpcInfo(referenClazz);
-        return needResetToDirect(rpcInfo,env);
-    }
 
     /**
      * 直连重置校验
-     * @param rpcInfo
+     * @param appName
      * @param env
      * @return
      */
-    public static boolean needResetToDirect(RpcInfo rpcInfo,StandardEnvironment env ){
-        if (rpcInfo != null ){
-            String appName = rpcInfo.appName();
+    public static boolean needResetToDirect(String appName,StandardEnvironment env ){
+        if (StringUtils.hasText(appName)){
             String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName,urlPropertyName);
             return env.containsProperty(rpcUrlResetKey);
         }
         return false;
+    }
+
+    /**
+     * 直连重置校验
+     * @param interfaceClazz
+     * @param env
+     * @return
+     */
+    public static boolean needResetToDirect(Class interfaceClazz,StandardEnvironment env ){
+        String appName = getAppName(interfaceClazz,env);
+        return needResetToDirect(appName,env);
     }
 
     /**
@@ -112,10 +98,9 @@ public class RpcInfoContext {
      */
     public static void resetToDirect(StandardEnvironment env, MutablePropertyValues mutablePropertyValues ){
         String referenClazzName = mutablePropertyValues.getPropertyValue(interfacePropertyName).getValue().toString();
-
-        RpcInfo rpcInfo = getAppRpcInfo(referenClazzName);
-        if (rpcInfo != null && needResetToDirect(rpcInfo,env)){
-            String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(rpcInfo.appName(),urlPropertyName);
+        String appName = getAppName(referenClazzName,env);
+        if (needResetToDirect(appName,env)){
+            String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName,urlPropertyName);
             String url = env.getProperty(rpcUrlResetKey);
             mutablePropertyValues.removePropertyValue(RpcInfoContext.urlPropertyName);
             mutablePropertyValues.add(RpcInfoContext.urlPropertyName,url);
@@ -132,16 +117,15 @@ public class RpcInfoContext {
      * @param element
      */
     public static void resetToDirect(StandardEnvironment env, InjectionMetadata.InjectedElement element){
-        RpcInfo rpcInfo = null;
+        String appName = null;
 
         Object reference = ReflectUtils.getBeanFieldValNoError(element,referenceField);
         Field field = (Field)ReflectUtils.getBeanFieldValNoError(element,popFieldName);
         if (field != null && reference !=  null ){
             Class fieldClazz = field.getType();
-            rpcInfo = RpcInfoContext.getAppRpcInfo(fieldClazz);
+            appName = getAppName(fieldClazz,env);
         }
-        if (needResetToDirect(rpcInfo,env)){
-            String appName = rpcInfo.appName();
+        if (needResetToDirect(appName,env)){
             String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName, urlPropertyName);
             if (env.containsProperty(rpcUrlResetKey)){
                 String url = env.getProperty(rpcUrlResetKey);
@@ -153,12 +137,56 @@ public class RpcInfoContext {
 
     /**
      * 获取直连url
-     * @param appName
+     * @param referenClazz
      * @param env
      * @return
      */
-    public static String getDirectUrl(String appName , StandardEnvironment env){
+    public static String getDirectUrl(Class referenClazz , StandardEnvironment env){
+        String appName = getAppName(referenClazz,env);
         String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName, urlPropertyName);
         return env.getProperty(rpcUrlResetKey);
+    }
+
+    private synchronized static void initAppName(StandardEnvironment env){
+        if (!pkgAppNameMapInitFlag){
+            Map<String, Object> envMap = env.getSystemProperties() ;
+            if (!CollectionUtils.isEmpty(envMap)){
+                envMap.entrySet().forEach(entry -> {
+                    String key = entry.getKey();
+
+                    if (Pattern.matches(apiPackagePattern,key)){
+                        String appName = key.replace(appResetPrefix+".","").replace("."+apiPackagePropertyName,"");
+                        pkgAppNameMap.putIfAbsent(entry.getValue().toString(),appName);
+                    }
+
+                });
+            }
+            pkgAppNameMapInitFlag = true;
+        }
+
+    }
+
+    private static String getAppName(Class referenClazz, StandardEnvironment env){
+        initAppName(env);
+        String pkgName = referenClazz.getPackage().getName();
+        if (pkgAppNameMap.containsKey(pkgName)){
+            return pkgAppNameMap.get(pkgName);
+        }else {
+            RpcInfo rpcInfo = getAppRpcInfo(referenClazz);
+            if (rpcInfo != null){
+                pkgAppNameMap.putIfAbsent(pkgName,rpcInfo.appName());
+                return rpcInfo.appName();
+            }
+        }
+        return null;
+    }
+
+    private static String getAppName(String referenClazz, StandardEnvironment env){
+        try {
+            Class clazz = Class.forName(referenClazz);
+            return getAppName(clazz,env);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
     }
 }
