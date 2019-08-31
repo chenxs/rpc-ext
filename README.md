@@ -23,6 +23,17 @@ DUBBO rpc服务服务端客户端统一配置|将dubbo的rpc服务的服务端�
 
 1.在api根包下添加com.hill.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo注解
 如:服务端提供的api包的更目录为com.hill.ext.demo.dubbo.api,则在com.hill.ext.demo.dubbo.api添加package-info.java并在package-info.java添加RpcInfo并指明应用名“api-test”
+![pgkinfoConfig](./readme/img/pgkinfoConfig.png "pgkinfoConfig")
 
-rpc 功能扩展工具包：现已支持dubbo基于应用级别的点对点直连
+package-info.java的内容
+```
+@RpcInfo(appName = "api-test")
+package com.hill.ext.demo.dubbo.api;
 
+import com.hill.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo;
+```
+
+2.客户端启动参数添加配置项
+自测直连的配置参数格式化为:
+`rpc.reset.${appName}.url=dubbo://${ip}:${port}`
+![clientTestConfig](./readme/img/clientTestConfig.png "clientTestConfig")

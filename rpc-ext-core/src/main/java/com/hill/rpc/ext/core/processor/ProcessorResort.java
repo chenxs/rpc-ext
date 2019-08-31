@@ -5,15 +5,25 @@ import org.springframework.context.ApplicationContext;
 
 /**
  * 〈一句话功能简述〉<br>
- * Description: beanPostProcessor顺序重组bean
+ * Description: beanPostProcessor顺序重组配置bean
  *
  * @author hillchen
  * @create 2019/8/31 13:06
  */
 public interface ProcessorResort {
 
+    /**
+     * 获取前置beanProcessor
+     * @param applicationContext
+     * @return
+     */
     BeanPostProcessor getBeforeBeanProcessor(ApplicationContext applicationContext) ;
 
+    /**
+     * 获取后置beanProcessor
+     * @param applicationContext
+     * @return
+     */
     BeanPostProcessor getAfterBeanProcessor(ApplicationContext applicationContext);
 
     /**

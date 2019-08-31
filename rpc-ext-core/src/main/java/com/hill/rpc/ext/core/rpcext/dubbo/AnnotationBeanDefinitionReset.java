@@ -35,8 +35,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * 〈一句话功能简述〉<br>
- * Description: RPC应用级别服务点对点BeanDefinition重置
- * 在加载完spring上下文配置信息后对所有的类型为ReferenceBean的BeanDefinition中直连url进行重置
+ * Description: AnnotationBean驱动的的dubbo rpc 应用级点对点直连扩展
  *
  * @author hillchen
  * @create 2019/8/25 22:31
@@ -102,8 +101,11 @@ public class AnnotationBeanDefinitionReset implements BeanPostProcessor,  Applic
         return LOWEST_PRECEDENCE;
     }
 
-
-
+    /**
+     * 初始化referenceConfig并重置url
+     * @param reference
+     * @param referenceClass
+     */
     private void resetRefer(Reference reference, Class<?> referenceClass) {
         if (RpcInfoContext.needResetToDirect(referenceClass,getEnv())){
             String interfaceName;

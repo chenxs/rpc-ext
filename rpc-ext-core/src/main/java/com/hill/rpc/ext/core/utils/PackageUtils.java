@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 〈java类包工具类〉<br>
  * Description: java类包工具类
  *
  * @author hillchen

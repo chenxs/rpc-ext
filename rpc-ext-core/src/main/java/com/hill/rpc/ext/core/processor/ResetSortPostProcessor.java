@@ -15,7 +15,10 @@ import java.util.Map;
 
 /**
  * 〈一句话功能简述〉<br>
- * Description: ResetSortPostProcessor
+ * Description: 将spring容器中的BeanPostProcessor列表在执行前做一次重排,
+ * 以解决在各个第三方库中将BeanPostProcessor的执行顺序放到了最后面，或没有设置排序值,
+ * 而自己扩展的功能有必须保证与第三方定义的BeanPostProcessor保持一定执行顺序
+ *
  *
  * @author hillchen
  * @create 2019/8/30 00:52

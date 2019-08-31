@@ -20,14 +20,20 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RpcInfoContext {
     private RpcInfoContext(){}
 
-    public static final String appResetPrefix = "rpc.reset";
-    public static final String urlPropertyName = "url";
-    public static final String timeoutPropertyName = "timeout";
-    public static final String interfacePropertyName = "interface";
-    public static final String referenceField = "reference";
-    public static final String popFieldName = "field";
+    private static final String appResetPrefix = "rpc.reset";
+    private static final String urlPropertyName = "url";
+    private static final String timeoutPropertyName = "timeout";
+    private static final String interfacePropertyName = "interface";
+    private static final String referenceField = "reference";
+    private static final String popFieldName = "field";
 
-    public static ConcurrentHashMap<String, RpcInfo> rpcInfoMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, RpcInfo> rpcInfoMap = new ConcurrentHashMap<>();
+
+    /**
+     * 获取接口上的RpcInfo注解
+     * @param interfaceName
+     * @return
+     */
     public static RpcInfo getAppRpcInfo(String interfaceName) {
         if (rpcInfoMap.containsKey(interfaceName)){
             return rpcInfoMap.get(interfaceName);
@@ -45,6 +51,11 @@ public class RpcInfoContext {
         }
     }
 
+    /**
+     * 获取接口上的RpcInfo注解
+     * @param interfaceClazz
+     * @return
+     */
     public static RpcInfo getAppRpcInfo(Class interfaceClazz) {
         String interfaceName = interfaceClazz.getName();
         if (rpcInfoMap.containsKey(interfaceName)){
@@ -58,15 +69,33 @@ public class RpcInfoContext {
         }
     }
 
-    public static String getRpcResetKey (String appName,String parameName){
+    /**
+     * 获取rpcInfo的缓存key
+     * @param appName
+     * @param parameName
+     * @return
+     */
+    private static String getRpcResetKey (String appName,String parameName){
         return new StringBuilder(appResetPrefix).append(".").append(appName).append(".").append(parameName).toString();
     }
 
+    /**
+     * 直连重置校验
+     * @param referenClazz
+     * @param env
+     * @return
+     */
     public static boolean needResetToDirect(Class referenClazz, StandardEnvironment env ){
         RpcInfo rpcInfo = getAppRpcInfo(referenClazz);
         return needResetToDirect(rpcInfo,env);
     }
 
+    /**
+     * 直连重置校验
+     * @param rpcInfo
+     * @param env
+     * @return
+     */
     public static boolean needResetToDirect(RpcInfo rpcInfo,StandardEnvironment env ){
         if (rpcInfo != null ){
             String appName = rpcInfo.appName();
@@ -75,6 +104,12 @@ public class RpcInfoContext {
         }
         return false;
     }
+
+    /**
+     * 重置点对点直连参数
+     * @param env
+     * @param mutablePropertyValues
+     */
     public static void resetToDirect(StandardEnvironment env, MutablePropertyValues mutablePropertyValues ){
         String referenClazzName = mutablePropertyValues.getPropertyValue(interfacePropertyName).getValue().toString();
 
@@ -91,6 +126,11 @@ public class RpcInfoContext {
         }
     }
 
+    /**
+     * 重置点对点直连参数
+     * @param env
+     * @param element
+     */
     public static void resetToDirect(StandardEnvironment env, InjectionMetadata.InjectedElement element){
         RpcInfo rpcInfo = null;
 
@@ -111,6 +151,12 @@ public class RpcInfoContext {
         }
     }
 
+    /**
+     * 获取直连url
+     * @param appName
+     * @param env
+     * @return
+     */
     public static String getDirectUrl(String appName , StandardEnvironment env){
         String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName, urlPropertyName);
         return env.getProperty(rpcUrlResetKey);

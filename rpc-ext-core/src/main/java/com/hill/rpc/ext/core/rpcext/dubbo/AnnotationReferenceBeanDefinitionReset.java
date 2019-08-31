@@ -23,8 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * 〈一句话功能简述〉<br>
- * Description: RPC应用级别服务点对点BeanDefinition重置
- * 在加载完spring上下文配置信息后对所有的类型为ReferenceBean的BeanDefinition中直连url进行重置
+ * Description: 纯注解驱动的的dubbo rpc 应用级点对点直连扩展
  *
  * @author hillchen
  * @create 2019/8/25 22:31

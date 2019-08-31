@@ -15,5 +15,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.PACKAGE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RpcInfo {
+    /**
+     * 应用名
+     * @return
+     */
     String appName ();
 }
