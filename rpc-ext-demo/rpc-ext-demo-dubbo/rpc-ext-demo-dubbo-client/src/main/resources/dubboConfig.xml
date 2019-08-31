@@ -5,6 +5,6 @@
     http://www.springframework.org/schema/beans/spring-beans.xsd        
     http://code.alibabatech.com/schema/dubbo        
     http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
-	<dubbo:annotation package="com.hill.ext.demo.dubbo.client"/>
 
+	<dubbo:annotation package="com.github.chenxs.rpc.ext.demo.dubbo.client"/>
 </beans>

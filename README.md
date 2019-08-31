@@ -30,7 +30,7 @@ package-info.java的内容
 @RpcInfo(appName = "api-test")
 package com.hill.ext.demo.dubbo.api;
 
-import com.hill.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo;
+import RpcInfo;
 ```
 
 2.客户端启动参数添加配置项
