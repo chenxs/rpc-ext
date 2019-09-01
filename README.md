@@ -15,15 +15,20 @@
 通过个性化配置文件，每个开发者通过指定的唯一的版本号将本地服务发布到注册中心，在服务引用时通过这个特定的版本好来寻找服务。但是该方案还是存在了在每个服务上都需要加上指定版本好的占位符配置项，而且是必不可少的，这样虽然解决了问题但还是会引来太多的额外的配置信息。
 
 ### 本方案的解题思路
+  
   a.通过在api的根包下加上自定义注解，用来指定api包的服务的在集群中的唯一标示：应用名
+  
   b.在客户端服务的启动参数里加上点对点直连配置项
+  
   c.在spring容器初始化时根据点对点直连配置项修改指定应用下的referenceBean的定义信息，即加上直连的url地址和扩大rpc服务的超时事件为五分钟
 
 ### 使用方式
 
 #### api包中定义RpcInfo的使用方式
 1.在api根包下添加com.github.chenxs.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo注解
+
 如:服务端提供的api包的更目录为com.github.chenxs.rpc.ext.demo.dubbo.api,则在com.github.chenxs.rpc.ext.demo.dubbo.api添加package-info.java并在package-info.java添加RpcInfo并指明应用名“api-test”
+
 ![pgkinfoConfig](./readme/img/pgkinfoConfig.png "pgkinfoConfig")
 
 package-info.java的内容
@@ -35,27 +40,36 @@ com.github.chenxs.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo;
 ```
 
 2.客户端启动参数添加应用直连地址配置项
+
 应用直连地址配置项格式:
+
 `rpc.reset.${appName}.url=dubbo://${ip}:${port}`
+
 ![clientTestConfig](./readme/img/clientTestConfig.png "clientTestConfig")
 
 
 #### api包中未定义RpcInfo的使用方式一
 
 1.客户端启动参数添加应用与包之间映射关系的配置项
+
 格式：`rpc.reset.${appName}.apiPackage=${rootPackageName}`
 
 2.添加应用直连地址配置项
+
 格式：`rpc.reset.${appName}.url=dubbo://${ip}:${port}`
 
 示例：
+
 ![noRpcInfoConfig1](./readme/img/noRpcInfoConfig1.png "noRpcInfoConfig1")
 
 
 #### api包中未定义RpcInfo的使用方式二
 
 1.客户端启动参数直接添加java包与直连地址之间映射关系的配置项
+
 格式：`rpc.pkg.reset.${rootPackageName}.url=dubbo://${ip}:${port}`
+
 示例：
+
 ![noRpcInfoConfig2](./readme/img/noRpcInfoConfig2.png "noRpcInfoConfig2")
 
