@@ -11,6 +11,8 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -32,10 +34,13 @@ public class RpcInfoContext {
     private static final String referenceField = "reference";
     private static final String popFieldName = "field";
     private static final String apiPackagePattern = "rpc\\.reset\\..+\\.apiPackage" ;
+    private static final String packageUrlPattern = "rpc\\.pkg\\.reset\\..+\\.url" ;
+    private static final String appUrlPattern = "rpc\\.reset\\..+\\.url" ;
     private static boolean pkgAppNameMapInitFlag = false;
 
-    private static final ConcurrentHashMap<String, RpcInfo> rpcInfoMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, String> pkgAppNameMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Optional<RpcInfo>> rpcInfoMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Optional<String>> pkgAppNameMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Optional<String>> appUrlMap = new ConcurrentHashMap<>();
 
     /**
      * 获取接口上的RpcInfo注解
@@ -45,12 +50,10 @@ public class RpcInfoContext {
     public static RpcInfo getAppRpcInfo(Class interfaceClazz) {
         String interfaceName = interfaceClazz.getName();
         if (rpcInfoMap.containsKey(interfaceName)){
-            return rpcInfoMap.get(interfaceName);
+            return rpcInfoMap.get(interfaceName).orElse(null);
         }else {
             RpcInfo rpcInfo = AnnotationUtils.recursionGet(interfaceClazz, RpcInfo.class);
-            if (rpcInfo != null){
-                rpcInfoMap.putIfAbsent(interfaceName,rpcInfo);
-            }
+            rpcInfoMap.putIfAbsent(interfaceName,Optional.ofNullable(rpcInfo));
             return rpcInfo;
         }
     }
@@ -100,14 +103,15 @@ public class RpcInfoContext {
         String referenClazzName = mutablePropertyValues.getPropertyValue(interfacePropertyName).getValue().toString();
         String appName = getAppName(referenClazzName,env);
         if (needResetToDirect(appName,env)){
-            String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName,urlPropertyName);
-            String url = env.getProperty(rpcUrlResetKey);
-            mutablePropertyValues.removePropertyValue(RpcInfoContext.urlPropertyName);
-            mutablePropertyValues.add(RpcInfoContext.urlPropertyName,url);
+            String url = getDirectUrl(appName,env);
+            if (StringUtils.hasText(url)){
+                mutablePropertyValues.removePropertyValue(RpcInfoContext.urlPropertyName);
+                mutablePropertyValues.add(RpcInfoContext.urlPropertyName,url);
 
-            // 当存在点对点直连时，所在点对点服务的超时时间为5分钟
-            mutablePropertyValues.removePropertyValue(timeoutPropertyName);
-            mutablePropertyValues.add(timeoutPropertyName,1000*60*5);
+                // 当存在点对点直连时，所在点对点服务的超时时间为5分钟
+                mutablePropertyValues.removePropertyValue(timeoutPropertyName);
+                mutablePropertyValues.add(timeoutPropertyName,1000*60*5);
+            }
         }
     }
 
@@ -126,9 +130,8 @@ public class RpcInfoContext {
             appName = getAppName(fieldClazz,env);
         }
         if (needResetToDirect(appName,env)){
-            String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName, urlPropertyName);
-            if (env.containsProperty(rpcUrlResetKey)){
-                String url = env.getProperty(rpcUrlResetKey);
+            String url = getDirectUrl(appName,env);
+            if (StringUtils.hasText(url)){
                 AnnotationUtils.setAnnotationFieldVal(reference,urlPropertyName,url);
                 AnnotationUtils.setAnnotationFieldVal(reference,timeoutPropertyName,1000*60*5);
             }
@@ -142,9 +145,26 @@ public class RpcInfoContext {
      * @return
      */
     public static String getDirectUrl(Class referenClazz , StandardEnvironment env){
+        initAppName(env);
         String appName = getAppName(referenClazz,env);
-        String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName, urlPropertyName);
-        return env.getProperty(rpcUrlResetKey);
+        if (StringUtils.hasText(appName)){
+            return appUrlMap.get(appName).orElse(null);
+        }
+        return null;
+    }
+
+    /**
+     * 获取直连url
+     * @param appName
+     * @param env
+     * @return
+     */
+    public static String getDirectUrl(String appName , StandardEnvironment env){
+        if (StringUtils.hasText(appName)){
+            initAppName(env);
+            return appUrlMap.get(appName).orElse(null);
+        }
+        return null;
     }
 
     private synchronized static void initAppName(StandardEnvironment env){
@@ -153,12 +173,17 @@ public class RpcInfoContext {
             if (!CollectionUtils.isEmpty(envMap)){
                 envMap.entrySet().forEach(entry -> {
                     String key = entry.getKey();
-
                     if (Pattern.matches(apiPackagePattern,key)){
                         String appName = key.replace(appResetPrefix+".","").replace("."+apiPackagePropertyName,"");
-                        pkgAppNameMap.putIfAbsent(entry.getValue().toString(),appName);
+                        pkgAppNameMap.putIfAbsent(entry.getValue().toString(),Optional.of(appName));
+                    }else if (Pattern.matches(packageUrlPattern,key)){
+                        String pkgName = key.replace("rpc.pkg.reset.","").replace("."+urlPropertyName,"");
+                        pkgAppNameMap.putIfAbsent(pkgName,Optional.of(pkgName));
+                        appUrlMap.putIfAbsent(pkgName,Optional.ofNullable(entry.getValue().toString()));
+                    }else if (Pattern.matches(appUrlPattern,key)){
+                        String appName = key.replace("rpc.reset.","").replace("."+urlPropertyName,"");
+                        appUrlMap.putIfAbsent(appName,Optional.ofNullable(entry.getValue().toString()));
                     }
-
                 });
             }
             pkgAppNameMapInitFlag = true;
@@ -168,16 +193,34 @@ public class RpcInfoContext {
 
     private static String getAppName(Class referenClazz, StandardEnvironment env){
         initAppName(env);
-        String pkgName = referenClazz.getPackage().getName();
-        if (pkgAppNameMap.containsKey(pkgName)){
-            return pkgAppNameMap.get(pkgName);
+        String appName = getAppNameFrompkgAppNameMap(referenClazz);
+        if (StringUtils.hasText(appName)){
+            return appName;
         }else {
             RpcInfo rpcInfo = getAppRpcInfo(referenClazz);
             if (rpcInfo != null){
-                pkgAppNameMap.putIfAbsent(pkgName,rpcInfo.appName());
+                pkgAppNameMap.putIfAbsent(referenClazz.getPackage().getName(),Optional.ofNullable(rpcInfo.appName()));
                 return rpcInfo.appName();
             }
         }
+        return null;
+    }
+
+    private static String getAppNameFrompkgAppNameMap(Class referenClazz){
+        Package clazzPackage = referenClazz.getPackage();
+        Package pkg = clazzPackage;
+        while (pkg != null){
+            String pkgName = pkg.getName();
+            if (pkgAppNameMap.containsKey(pkgName)){
+                Optional<String> optional = pkgAppNameMap.get(pkgName);
+                if (!Objects.equals(pkg,clazzPackage)){
+                    pkgAppNameMap.putIfAbsent(clazzPackage.getName(),optional);
+                }
+                return optional.orElse(null);
+            }
+        }
+
+        pkgAppNameMap.putIfAbsent(clazzPackage.getName(),Optional.empty());
         return null;
     }
 

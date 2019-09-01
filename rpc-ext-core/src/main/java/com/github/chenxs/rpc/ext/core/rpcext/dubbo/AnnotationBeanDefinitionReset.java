@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -145,11 +146,14 @@ public class AnnotationBeanDefinitionReset implements BeanPostProcessor,  Applic
                         referenceConfig.setConsumer((ConsumerConfig) applicationContext.getBean(reference.consumer(), ConsumerConfig.class));
                     }
                     try {
-                        referenceConfig.setUrl(RpcInfoContext.getDirectUrl(referenceClass,getEnv()));
-                        referenceConfig.setTimeout(1000*60*5);
+                        String url = RpcInfoContext.getDirectUrl(referenceClass,getEnv());
+                        if (StringUtils.hasText(url)){
+                            referenceConfig.setUrl(url);
+                            referenceConfig.setTimeout(1000*60*5);
+                        }
                         referenceConfig.afterPropertiesSet();
                     } catch (RuntimeException e) {
-                        throw (RuntimeException) e;
+                        throw  e;
                     } catch (Exception e) {
                         throw new IllegalStateException(e.getMessage(), e);
                     }
