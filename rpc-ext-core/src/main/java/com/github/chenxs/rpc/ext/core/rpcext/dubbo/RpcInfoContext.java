@@ -2,6 +2,7 @@ package com.github.chenxs.rpc.ext.core.rpcext.dubbo;
 
 import com.github.chenxs.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo;
 import com.github.chenxs.rpc.ext.core.utils.AnnotationUtils;
+import com.github.chenxs.rpc.ext.core.utils.PackageUtils;
 import com.github.chenxs.rpc.ext.core.utils.ReflectUtils;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
@@ -33,9 +34,9 @@ public class RpcInfoContext {
     private static final String interfacePropertyName = "interface";
     private static final String referenceField = "reference";
     private static final String popFieldName = "field";
-    private static final String apiPackagePattern = "rpc\\.reset\\..+\\.apiPackage" ;
-    private static final String packageUrlPattern = "rpc\\.pkg\\.reset\\..+\\.url" ;
-    private static final String appUrlPattern = "rpc\\.reset\\..+\\.url" ;
+    private static final String apiPackagePattern = "^rpc\\.reset\\..+\\.apiPackage$" ;
+    private static final String packageUrlPattern = "^rpc\\.pkg\\.reset\\..+\\.url$" ;
+    private static final String appUrlPattern = "^rpc\\.reset\\..+\\.url$" ;
     private static boolean pkgAppNameMapInitFlag = false;
 
     private static final ConcurrentHashMap<String, Optional<RpcInfo>> rpcInfoMap = new ConcurrentHashMap<>();
@@ -76,9 +77,9 @@ public class RpcInfoContext {
      * @return
      */
     public static boolean needResetToDirect(String appName,StandardEnvironment env ){
+        initAppName(env);
         if (StringUtils.hasText(appName)){
-            String rpcUrlResetKey = RpcInfoContext.getRpcResetKey(appName,urlPropertyName);
-            return env.containsProperty(rpcUrlResetKey);
+            return appUrlMap.get(appName).isPresent();
         }
         return false;
     }
@@ -174,14 +175,14 @@ public class RpcInfoContext {
                 envMap.entrySet().forEach(entry -> {
                     String key = entry.getKey();
                     if (Pattern.matches(apiPackagePattern,key)){
-                        String appName = key.replace(appResetPrefix+".","").replace("."+apiPackagePropertyName,"");
+                        String appName = key.substring(appResetPrefix.length() + 1,key.length() - apiPackagePropertyName.length()- 1);
                         pkgAppNameMap.putIfAbsent(entry.getValue().toString(),Optional.of(appName));
                     }else if (Pattern.matches(packageUrlPattern,key)){
-                        String pkgName = key.replace("rpc.pkg.reset.","").replace("."+urlPropertyName,"");
+                        String pkgName = key.substring("rpc.pkg.reset".length() + 1,key.length() - urlPropertyName.length() - 1);
                         pkgAppNameMap.putIfAbsent(pkgName,Optional.of(pkgName));
                         appUrlMap.putIfAbsent(pkgName,Optional.ofNullable(entry.getValue().toString()));
                     }else if (Pattern.matches(appUrlPattern,key)){
-                        String appName = key.replace("rpc.reset.","").replace("."+urlPropertyName,"");
+                        String appName = key.substring(appResetPrefix.length() + 1,key.length() - urlPropertyName.length()- 1);
                         appUrlMap.putIfAbsent(appName,Optional.ofNullable(entry.getValue().toString()));
                     }
                 });
@@ -217,6 +218,8 @@ public class RpcInfoContext {
                     pkgAppNameMap.putIfAbsent(clazzPackage.getName(),optional);
                 }
                 return optional.orElse(null);
+            }else{
+                pkg = PackageUtils.getParent(pkg);
             }
         }
 
