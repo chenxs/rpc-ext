@@ -1,5 +1,7 @@
 package com.github.chenxs.rpc.ext.core.utils;
 
+import org.springframework.util.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,15 +39,35 @@ public class PackageUtils {
         }
     }
 
+    /**
+     * 获取父包，当父包空间以及父包的所有祖宗包下没有定义java类并且没有定义package-info时返回空
+     * @param pkg
+     * @return
+     */
     public static Package getParent(Package pkg){
         if (Objects.isNull(pkg)){
             return null;
         }
         String pkgName = pkg.getName();
+        String parentPckName = getParentPackageName(pkgName);
+        if (StringUtils.hasText(parentPckName)){
+            return getPackage(parentPckName);
+        }
+        return null;
+    }
+
+    /**
+     * 根据当前包名获取父包名
+     * @param pkgName
+     * @return
+     */
+    public static String getParentPackageName(String pkgName){
+        if (!StringUtils.hasText(pkgName)){
+            return null;
+        }
         int index = pkgName.lastIndexOf(".");
         if (index > 0){
-            String parentPckName = pkgName.substring(0,index);
-            return getPackage(parentPckName);
+            return pkgName.substring(0,index);
         }
         return null;
     }

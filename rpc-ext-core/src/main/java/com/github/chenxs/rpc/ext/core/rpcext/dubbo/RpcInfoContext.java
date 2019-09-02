@@ -194,7 +194,7 @@ public class RpcInfoContext {
 
     private static String getAppName(Class referenClazz, StandardEnvironment env){
         initAppName(env);
-        String appName = getAppNameFrompkgAppNameMap(referenClazz);
+        String appName = getAppNameFromPkgAppNameMap(referenClazz);
         if (StringUtils.hasText(appName)){
             return appName;
         }else {
@@ -206,24 +206,21 @@ public class RpcInfoContext {
         }
         return null;
     }
-
-    private static String getAppNameFrompkgAppNameMap(Class referenClazz){
-        Package clazzPackage = referenClazz.getPackage();
-        Package pkg = clazzPackage;
-        while (pkg != null){
-            String pkgName = pkg.getName();
+    private static String getAppNameFromPkgAppNameMap(Class referenClazz){
+        String clazzPackageName = referenClazz.getPackage().getName();
+        String pkgName = clazzPackageName;
+        while (StringUtils.hasText(pkgName)){
             if (pkgAppNameMap.containsKey(pkgName)){
                 Optional<String> optional = pkgAppNameMap.get(pkgName);
-                if (!Objects.equals(pkg,clazzPackage)){
-                    pkgAppNameMap.putIfAbsent(clazzPackage.getName(),optional);
+                if (!Objects.equals(pkgName,clazzPackageName)){
+                    pkgAppNameMap.putIfAbsent(clazzPackageName,optional);
                 }
                 return optional.orElse(null);
             }else{
-                pkg = PackageUtils.getParent(pkg);
+                pkgName = PackageUtils.getParentPackageName(pkgName);
             }
         }
-
-        pkgAppNameMap.putIfAbsent(clazzPackage.getName(),Optional.empty());
+        pkgAppNameMap.putIfAbsent(clazzPackageName,Optional.empty());
         return null;
     }
 
