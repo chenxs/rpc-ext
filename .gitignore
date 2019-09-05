@@ -5,6 +5,7 @@ build/*
 .idea/workspace.xml
 *.settings
 ./**/target
+/target/
 
 /out/
 /build/
