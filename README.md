@@ -25,18 +25,18 @@
 ### 使用方式
 
 #### api包中定义RpcInfo的使用方式
-1.在api根包下添加com.github.chenxs.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo注解
+1.在api根包下添加cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo注解
 
-如:服务端提供的api包的更目录为com.github.chenxs.rpc.ext.demo.dubbo.api,则在com.github.chenxs.rpc.ext.demo.dubbo.api添加package-info.java并在package-info.java添加RpcInfo并指明应用名“api-test”
+如:服务端提供的api包的更目录为cn.hill4j.rpcext.demo.dubbo.api,则在cn.hill4j.rpcext.demo.dubbo.api添加package-info.java并在package-info.java添加RpcInfo并指明应用名“api-test”
 
 ![pgkinfoConfig](./readme/img/pgkinfoConfig.png "pgkinfoConfig")
 
 package-info.java的内容
 ```
 @RpcInfo(appName = "api-test")
-package com.github.chenxs.rpc.ext.demo.dubbo.api;
+package cn.hill4j.rpcext.demo.dubbo.api;
 
-com.github.chenxs.rpc.ext.core.rpcext.dubbo.annotation.RpcInfo;
+import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
 ```
 
 2.客户端启动参数添加应用直连地址配置项

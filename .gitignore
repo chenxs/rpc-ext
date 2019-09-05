@@ -6,6 +6,7 @@ build/*
 *.settings
 ./**/target
 /target/
+target
 
 /out/
 /build/
