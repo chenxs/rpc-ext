@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RpcService{
+public @interface RpcApi {
     /**
      * 服务版本
      * @return

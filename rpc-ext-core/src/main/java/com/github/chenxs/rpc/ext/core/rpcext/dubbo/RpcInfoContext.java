@@ -78,7 +78,7 @@ public class RpcInfoContext {
      */
     public static boolean needResetToDirect(String appName,StandardEnvironment env ){
         initAppName(env);
-        if (StringUtils.hasText(appName)){
+        if (StringUtils.hasText(appName) && appUrlMap.containsKey(appName)){
             return appUrlMap.get(appName).isPresent();
         }
         return false;
