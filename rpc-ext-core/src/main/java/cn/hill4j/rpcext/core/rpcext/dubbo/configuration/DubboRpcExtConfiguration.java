@@ -15,18 +15,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/26 16:40 <br>
  * Description: dubbo的RPC扩展功能自动装置bean
  *
  * @author hillchen
- * @create 2019/8/26 16:40
  */
 @Configuration
 @ConditionalOnClass({DubboNamespaceHandler.class})
 public class DubboRpcExtConfiguration {
     /**
      * xml配置文件驱动的ReferenceBeanDefinition的dubbo rpc 应用级点对点直连扩展
-     * @return
+     * @return 构造XmlReferenceBeanDefinitionReset bean
      */
     @Bean
     public XmlReferenceBeanDefinitionReset xmlReferenceBeanDefinitionReset(){
@@ -35,7 +34,7 @@ public class DubboRpcExtConfiguration {
 
     /**
      * 纯注解驱动的的dubbo rpc 应用级点对点直连扩展
-     * @return
+     * @return 构造AnnotationReferenceBeanDefinitionReset bean
      */
     @Bean
     @ConditionalOnClass({ReferenceAnnotationBeanPostProcessor.class})
@@ -47,7 +46,7 @@ public class DubboRpcExtConfiguration {
     /**
      * 纯注解驱动的的dubbo rpc 应用级点对点直连扩展
      * 必须要在dubbo自定义的ReferenceAnnotationBeanPostProcessor之后执行,这边手动调整顺序以保证执行顺序的确定性
-     * @return
+     * @return 构造 dubboReferencePostProcessorResort bean
      */
     @Bean
     @ConditionalOnClass({ReferenceAnnotationBeanPostProcessor.class})
@@ -74,7 +73,7 @@ public class DubboRpcExtConfiguration {
 
     /**
      * AnnotationBean驱动的的dubbo rpc 应用级点对点直连扩展
-     * @return
+     * @return 构造 AnnotationBeanDefinitionReset bean
      */
     @Bean
     @ConditionalOnBean({AnnotationBean.class})
@@ -84,7 +83,7 @@ public class DubboRpcExtConfiguration {
 
     /**
      * AnnotationBean驱动的的dubbo rpc 应用级点对点直连扩展bean必须在dubbo的AnnotationBean执行前现执行
-     * @return
+     * @return 构造dubboAnnotationBeanResort bean
      */
     @Bean
     @ConditionalOnBean({AnnotationBean.class})

@@ -18,11 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/30 01:24 <br>
  * Description: RpcInfoContext
  *
  * @author hillchen
- * @create 2019/8/30 01:24
  */
 public class RpcInfoContext {
     private RpcInfoContext(){}
@@ -45,8 +44,8 @@ public class RpcInfoContext {
 
     /**
      * 获取接口上的RpcInfo注解
-     * @param interfaceClazz
-     * @return
+     * @param interfaceClazz 接口类型
+     * @return 该类/包或祖宗包上第一次出现RpcInfo的注解对象，否则返回null,同时将RpcInfo对象存到上下文缓存中
      */
     public static RpcInfo getAppRpcInfo(Class interfaceClazz) {
         String interfaceName = interfaceClazz.getName();
@@ -59,22 +58,12 @@ public class RpcInfoContext {
         }
     }
 
-    /**
-     * 获取rpcInfo的缓存key
-     * @param appName
-     * @param parameName
-     * @return
-     */
-    private static String getRpcResetKey (String appName,String parameName){
-        return new StringBuilder(appResetPrefix).append(".").append(appName).append(".").append(parameName).toString();
-    }
-
 
     /**
      * 直连重置校验
-     * @param appName
-     * @param env
-     * @return
+     * @param appName 应用名
+     * @param env spring容器上下文
+     * @return 需要直连重置，则返回true需要直连重置，则返回false
      */
     public static boolean needResetToDirect(String appName,StandardEnvironment env ){
         initAppName(env);
@@ -86,9 +75,9 @@ public class RpcInfoContext {
 
     /**
      * 直连重置校验
-     * @param interfaceClazz
-     * @param env
-     * @return
+     * @param interfaceClazz 接口类型
+     * @param env spring容器上下文
+     * @return 需要直连重置，则返回true需要直连重置，则返回false
      */
     public static boolean needResetToDirect(Class interfaceClazz,StandardEnvironment env ){
         String appName = getAppName(interfaceClazz,env);
@@ -97,8 +86,9 @@ public class RpcInfoContext {
 
     /**
      * 重置点对点直连参数
-     * @param env
-     * @param mutablePropertyValues
+     * @param env spring容器上下文
+     * @param mutablePropertyValues dubbo ReferenceBean中的属性配置集合
+     *
      */
     public static void resetToDirect(StandardEnvironment env, MutablePropertyValues mutablePropertyValues ){
         String referenClazzName = mutablePropertyValues.getPropertyValue(interfacePropertyName).getValue().toString();
@@ -118,8 +108,8 @@ public class RpcInfoContext {
 
     /**
      * 重置点对点直连参数
-     * @param env
-     * @param element
+     * @param env spring容器上下文
+     * @param element spring bean中带有Reference注解的字段
      */
     public static void resetToDirect(StandardEnvironment env, InjectionMetadata.InjectedElement element){
         String appName = null;
@@ -141,9 +131,9 @@ public class RpcInfoContext {
 
     /**
      * 获取直连url
-     * @param referenClazz
-     * @param env
-     * @return
+     * @param referenClazz Reference接口类型
+     * @param env spring容器上下文
+     * @return 返回直连url
      */
     public static String getDirectUrl(Class referenClazz , StandardEnvironment env){
         initAppName(env);
@@ -156,9 +146,9 @@ public class RpcInfoContext {
 
     /**
      * 获取直连url
-     * @param appName
-     * @param env
-     * @return
+     * @param appName 应用名
+     * @param env spring容器上下文
+     * @return spring容器上下文
      */
     public static String getDirectUrl(String appName , StandardEnvironment env){
         if (StringUtils.hasText(appName)){

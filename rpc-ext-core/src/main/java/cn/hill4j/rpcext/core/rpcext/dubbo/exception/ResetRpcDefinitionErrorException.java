@@ -1,11 +1,10 @@
 package cn.hill4j.rpcext.core.rpcext.dubbo.exception;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/29 16:50 <br>
  * Description: exception.ResetRpcDefinitionErrorException
  *
  * @author hillchen
- * @create 2019/8/29 16:50
  */
 public class ResetRpcDefinitionErrorException extends RuntimeException {
     public ResetRpcDefinitionErrorException() {

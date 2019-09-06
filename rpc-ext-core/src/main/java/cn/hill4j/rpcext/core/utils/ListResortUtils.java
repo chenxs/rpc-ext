@@ -3,11 +3,10 @@ package cn.hill4j.rpcext.core.utils;
 import java.util.List;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/31 13:34 <br>
  * Description: 列表重排工具类
  *
  * @author hillchen
- * @create 2019/8/31 13:34
  */
 public class ListResortUtils {
     private ListResortUtils(){}
@@ -15,29 +14,23 @@ public class ListResortUtils {
     /**
      * 将list中的两个元素互换位置
      *
-     * @param list
-     * @param before
-     * @param after
+     * @param list 重排集合
+     * @param before 需要前置的对象
+     * @param after 需要后置置的对象
      * @param afterFixed 后置元素固定标志:
      *                   如果为true,则将原列表中顺序较大的元素与其他元素之间的位置关系不变，
      *                   即将中间元素和原列表中顺序较大的元素整体前移,然后将原列表中顺序较小的元素插入到空位中
      *                   如果为true,则反正
-     *                   示例：
-     *         List<Integer> list1 = Stream.of(0,1,2,3,4,5,6,7).collect(Collectors.toList());
+     *                   示例一：
+     *                   原列表为:{0,1,2,3,4,5,6,7}
+     *                   入参为：{before:6,after:2,afterFixed:true}
+     *                   重排后列表{0,1,3,4,5,6,2,7}
+     *                   示例二：
+     *                   原列表为:{0,1,2,3,4,5,6,7}
+     *                   入参为：{before:6,after:2,afterFixed:false}
+     *                   重排后列表{0,1,6,2,3,4,5,7}
      *
-     *         ListResortUtils.resortList(list1,6,2,true);
-     *         StringBuilder sb1 = new StringBuilder();
-     *         list1.forEach(e -> sb1.append(e));
-     *         Assert.isTrue("01345627".equals(sb1.toString()));
-     *
-     *         List<Integer> list2 = Stream.of(0,1,2,3,4,5,6,7).collect(Collectors.toList());
-     *
-     *         ListResortUtils.resortList(list2,6,2,false);
-     *         StringBuilder sb2 = new StringBuilder();
-     *         list2.forEach(e -> sb2.append(e));
-     *         Assert.isTrue("01623457".equals(sb2.toString()));
-     *
-     * @param <T>
+     * @param <T> 重排对象类型
      */
     public static <T> void resortList(List<T> list, T before, T after, boolean afterFixed){
         if (list == null){

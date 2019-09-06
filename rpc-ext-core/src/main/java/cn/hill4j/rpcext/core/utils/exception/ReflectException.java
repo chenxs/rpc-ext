@@ -1,11 +1,10 @@
 package cn.hill4j.rpcext.core.utils.exception;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/30 01:05 <br>
  * Description: ReflectException
  *
  * @author hillchen
- * @create 2019/8/30 01:05
  */
 public class ReflectException extends RuntimeException {
     public ReflectException() {

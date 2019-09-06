@@ -10,11 +10,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * 〈反射工具类〉<br>
+ * 2019/8/30 01:03<br>
  * Description: ReflectUtils
  *
  * @author hillchen
- * @create 2019/8/30 01:03
  */
 public class ReflectUtils {
     private static Logger LOGGER = LoggerFactory.getLogger(ReflectUtils.class);
@@ -23,9 +22,9 @@ public class ReflectUtils {
     /**
      * 通过反射获取指定bean上指定字段的值，即使是私有字段也是可以获取到的
      * 如果获取失败则抛出异常com.hill.rpc.ext.core.utils.exception.ReflectException
-     * @param bean
-     * @param fieldName
-     * @return
+     * @param bean bean对象
+     * @param fieldName 需要获取字段值的字段名
+     * @return 字段值
      */
     public static Object getBeanFieldVal(Object bean, String fieldName){
         try {
@@ -40,9 +39,9 @@ public class ReflectUtils {
     /**
      * 通过反射获取指定bean上指定字段的值，即使是私有字段也是可以获取到的
      * 如果获取失败则返回空
-     * @param bean
-     * @param fieldName
-     * @return
+     * @param bean bean对象
+     * @param fieldName 需要获取字段值的字段名
+     * @return 返回字段值， 如果获取失败则返回null
      */
     public static Object getBeanFieldValNoError(Object bean, String fieldName){
         try {
@@ -59,11 +58,11 @@ public class ReflectUtils {
      * 通过反射执行指定类的指定方法，即使是使用方法也是可以执行
      * 如果bean 为空则返回null,
      * 如果需要执行的方法不能找到则抛出异常com.hill.rpc.ext.core.utils.exception.ReflectException
-     * @param bean
-     * @param methodName
-     * @param paramsTypes
-     * @param params
-     * @return
+     * @param bean bean对象
+     * @param methodName 方法名
+     * @param paramsTypes 方法入参类型数组
+     * @param params 方法入参数组
+     * @return 执行方法的返回结果
      */
     public static Object invokeMethod(Object bean,String methodName,Class[] paramsTypes,Object... params) {
         if (bean != null){

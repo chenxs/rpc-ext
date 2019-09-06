@@ -15,12 +15,11 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/25 22:31 <br>
  * Description: xml配置文件驱动的ReferenceBeanDefinition的dubbo rpc 应用级点对点直连扩展
  * 在加载完spring上下文配置信息后对所有的类型为ReferenceBean的BeanDefinition中直连url进行重置
  *
  * @author hillchen
- * @create 2019/8/25 22:31
  */
 public class XmlReferenceBeanDefinitionReset implements BeanFactoryPostProcessor, ApplicationContextAware, Ordered {
 

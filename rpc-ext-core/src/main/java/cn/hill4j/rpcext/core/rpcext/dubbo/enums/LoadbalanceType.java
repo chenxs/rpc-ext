@@ -1,11 +1,10 @@
 package cn.hill4j.rpcext.core.rpcext.dubbo.enums;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/28 14:22 <br>
  * Description: 负载均衡类型
  *
  * @author hillchen
- * @create 2019/8/28 14:22
  */
 public enum LoadbalanceType {
     /**
@@ -26,6 +25,10 @@ public enum LoadbalanceType {
         this.type = type;
     }
 
+    /**
+     *
+     * @return type
+     */
     public String getType() {
         return type;
     }

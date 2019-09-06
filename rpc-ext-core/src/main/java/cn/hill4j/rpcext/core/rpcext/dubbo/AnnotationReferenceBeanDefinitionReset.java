@@ -18,11 +18,10 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/25 22:31 <br>
  * Description: 纯注解驱动的的dubbo rpc 应用级点对点直连扩展
  *
  * @author hillchen
- * @create 2019/8/25 22:31
  */
 public class AnnotationReferenceBeanDefinitionReset implements MergedBeanDefinitionPostProcessor,  ApplicationContextAware, PriorityOrdered {
     private ApplicationContext applicationContext;

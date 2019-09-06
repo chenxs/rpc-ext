@@ -24,11 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/25 22:31 <br>
  * Description: AnnotationBean驱动的的dubbo rpc 应用级点对点直连扩展
  *
  * @author hillchen
- * @create 2019/8/25 22:31
  */
 public class AnnotationBeanDefinitionReset implements BeanPostProcessor,  ApplicationContextAware, PriorityOrdered {
     private static final Logger logger = LoggerFactory.getLogger(Logger.class);

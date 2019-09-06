@@ -6,11 +6,10 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.ImportResource;
 
 /**
- * 〈一句话功能简述〉<br>
+ * 2019/8/28 19:23 <br>
  * Description: SerApplication
  *
  * @author hillchen
- * @create 2019/8/28 19:23
  */
 @SpringBootApplication
 @ImportResource({ "classpath:/dubboConfig.xml"})
