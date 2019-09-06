@@ -1,4 +1,4 @@
-package com.github.chenxs.rpc.ext.demo.dubbo.client.test;
+package cn.hill4j.rpcext.demo.dubbo.client.test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

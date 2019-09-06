@@ -1,11 +1,11 @@
-package com.github.chenxs.rpc.ext.demo.dubbo.client.test;
+package cn.hill4j.rpcext.demo.dubbo.client.test;
 
-import com.github.chenxs.rpc.ext.demo.dubbo.client.SayHelloClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.ApplicationContextTestUtils;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
 
@@ -20,13 +20,10 @@ import javax.annotation.Resource;
 @SpringBootTest(classes = SpringApplicationTest.class)
 public class SpringContextTest {
     @Resource
-    private SayHelloClient sayHelloClient;
-
+    private TestBean testBean;
     @Test
     public void sayHelloTest(){
-        String say = sayHelloClient.sayHello("hill chen");
-        Assert.hasLength(say,"need say something!");
-        System.out.println(say);
 
+        System.out.println("testBean.say");
     }
 }

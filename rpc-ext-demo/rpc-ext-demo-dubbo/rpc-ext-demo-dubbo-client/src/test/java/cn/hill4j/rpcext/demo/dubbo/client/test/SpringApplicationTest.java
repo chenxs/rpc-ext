@@ -1,10 +1,12 @@
-package com.github.chenxs.rpc.ext.demo.dubbo.client.test;
+package cn.hill4j.rpcext.demo.dubbo.client.test;
 
+import com.alibaba.dubbo.config.spring.context.annotation.EnableDubbo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ImportResource;
 
 /**
  * 〈一句话功能简述〉<br>
@@ -14,8 +16,14 @@ import org.springframework.context.annotation.ImportResource;
  * @create 2019/8/28 19:23
  */
 @SpringBootApplication
-@ImportResource({ "classpath:/dubboConfig.xml"})
+@EnableDubbo
 public class SpringApplicationTest {
+    private Logger logger = LoggerFactory.getLogger(SpringApplicationTest.class);
+
+    @Bean
+    public TestBeanDefinitionRegistryPostProcessor testBeanDefinitionRegistryPostProcessor(){
+        return new TestBeanDefinitionRegistryPostProcessor();
+    }
    @Bean
     public TestBeanFactoryPostProcessor testBeanFactoryPostProcessor(){
         return new TestBeanFactoryPostProcessor();
@@ -36,10 +44,17 @@ public class SpringApplicationTest {
         return new TestMergedBeanDefinitionPostProcessor();
     }
 
+    @Bean
+    public TestBean testBean(){
+        logger.error("SpringApplicationTest.testBean");
+       return new TestBean();
+    }
+
     /*@Bean
     public TestSmartInstantiationAwareBeanPostProcessor testSmartInstantiationAwareBeanPostProcessor(){
         return new TestSmartInstantiationAwareBeanPostProcessor();
     }*/
+
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(SpringApplicationTest.class)
