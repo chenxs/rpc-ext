@@ -96,7 +96,7 @@ public class DubboRpcExtConfiguration {
 
             @Override
             public BeanPostProcessor getAfterBeanProcessor(ApplicationContext applicationContext) {
-                return applicationContext.getBean(AnnotationBean.class,"referenceAnnotationBeanPostProcessor");
+                return applicationContext.getBean(AnnotationBean.class);
             }
 
             @Override

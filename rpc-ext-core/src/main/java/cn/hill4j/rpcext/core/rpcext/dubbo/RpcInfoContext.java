@@ -138,7 +138,7 @@ public class RpcInfoContext {
     public static String getDirectUrl(Class referenClazz , StandardEnvironment env){
         initAppName(env);
         String appName = getAppName(referenClazz,env);
-        if (StringUtils.hasText(appName)){
+        if (StringUtils.hasText(appName) && appUrlMap.containsKey(appName)){
             return appUrlMap.get(appName).orElse(null);
         }
         return null;
@@ -151,8 +151,8 @@ public class RpcInfoContext {
      * @return spring容器上下文
      */
     public static String getDirectUrl(String appName , StandardEnvironment env){
-        if (StringUtils.hasText(appName)){
-            initAppName(env);
+        initAppName(env);
+        if (StringUtils.hasText(appName) && appUrlMap.containsKey(appName)){
             return appUrlMap.get(appName).orElse(null);
         }
         return null;
