@@ -7,6 +7,13 @@
 |DUBBO rpc服务服务端客户端统一配置|将dubbo的rpc服务的服务端配置信息和客户端配置信息通过自定义注解配置到api接口上|规划中|
 
 ## DUBBO rpc服务应用级别点对点直连
+### maven依赖:已发布到maven中央仓库
+```
+        <dependency>
+            <groupId>cn.hill4j.rpcext</groupId>
+            <artifactId>rpc-ext-core</artifactId>
+        </dependency>
+```
 
 ### 解决的痛点
 由于现有的rpc服务框架的服务暴露和服务发现都是基于服务级别的，所以导致在对rpc的单元测试当需要点对点直连时，直连的粒度也是到服务级,一旦要测的功能设计到的rpc服务较多时，如果通过原始的点对点直连配置，就需要大量的配置来，加大了rpc服务的单元测试难度。
