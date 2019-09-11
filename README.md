@@ -12,6 +12,7 @@
         <dependency>
             <groupId>cn.hill4j.rpcext</groupId>
             <artifactId>rpc-ext-core</artifactId>
+            <version>1.1</version>
         </dependency>
 ```
 
