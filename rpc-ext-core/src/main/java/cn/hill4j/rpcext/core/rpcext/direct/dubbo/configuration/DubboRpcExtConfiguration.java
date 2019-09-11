@@ -1,9 +1,8 @@
-package cn.hill4j.rpcext.core.rpcext.dubbo.configuration;
+package cn.hill4j.rpcext.core.rpcext.direct.dubbo.configuration;
 
 import cn.hill4j.rpcext.core.processor.ProcessorResort;
-import cn.hill4j.rpcext.core.rpcext.dubbo.AnnotationBeanDefinitionReset;
-import cn.hill4j.rpcext.core.rpcext.dubbo.AnnotationReferenceBeanDefinitionReset;
-import cn.hill4j.rpcext.core.rpcext.dubbo.XmlReferenceBeanDefinitionReset;
+import cn.hill4j.rpcext.core.rpcext.direct.dubbo.AnnotationBeanDefinitionReset;
+import cn.hill4j.rpcext.core.rpcext.direct.dubbo.AnnotationReferenceBeanDefinitionReset;
 import com.alibaba.dubbo.config.spring.AnnotationBean;
 import com.alibaba.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor;
 import com.alibaba.dubbo.config.spring.schema.DubboNamespaceHandler;
@@ -13,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import cn.hill4j.rpcext.core.rpcext.direct.dubbo.XmlReferenceBeanDefinitionReset;
 
 /**
  * 2019/8/26 16:40 <br>

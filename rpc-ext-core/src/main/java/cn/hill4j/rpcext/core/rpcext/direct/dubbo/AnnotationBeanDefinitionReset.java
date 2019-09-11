@@ -1,4 +1,4 @@
-package cn.hill4j.rpcext.core.rpcext.dubbo;
+package cn.hill4j.rpcext.core.rpcext.direct.dubbo;
 
 import com.alibaba.dubbo.common.logger.Logger;
 import com.alibaba.dubbo.common.logger.LoggerFactory;

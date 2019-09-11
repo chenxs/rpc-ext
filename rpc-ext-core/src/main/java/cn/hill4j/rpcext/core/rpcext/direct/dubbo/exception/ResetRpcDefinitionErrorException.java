@@ -1,4 +1,4 @@
-package cn.hill4j.rpcext.core.rpcext.dubbo.exception;
+package cn.hill4j.rpcext.core.rpcext.direct.dubbo.exception;
 
 /**
  * 2019/8/29 16:50 <br>

@@ -1,4 +1,4 @@
-package cn.hill4j.rpcext.core.rpcext.dubbo;
+package cn.hill4j.rpcext.core.rpcext.direct.dubbo;
 
 import com.alibaba.dubbo.config.spring.ReferenceBean;
 import org.springframework.beans.BeansException;

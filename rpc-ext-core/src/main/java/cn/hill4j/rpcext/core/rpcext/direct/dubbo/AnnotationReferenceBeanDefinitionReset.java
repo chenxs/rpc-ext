@@ -1,8 +1,8 @@
-package cn.hill4j.rpcext.core.rpcext.dubbo;
+package cn.hill4j.rpcext.core.rpcext.direct.dubbo;
 
 import cn.hill4j.rpcext.core.utils.ReflectUtils;
 import com.alibaba.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor;
-import cn.hill4j.rpcext.core.rpcext.dubbo.exception.ResetRpcDefinitionErrorException;
+import cn.hill4j.rpcext.core.rpcext.direct.dubbo.exception.ResetRpcDefinitionErrorException;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;

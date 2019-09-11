@@ -1,4 +1,4 @@
-package cn.hill4j.rpcext.core.rpcext.dubbo.enums;
+package cn.hill4j.rpcext.core.rpcext.direct.dubbo.enums;
 
 /**
  * 2019/8/28 14:22 <br>
