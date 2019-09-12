@@ -1,4 +1,4 @@
-package cn.hill4j.rpcext.core.rpcext.direct.dubbo.annotation;
+package cn.hill4j.rpcext.core.rpcext.dubbo.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

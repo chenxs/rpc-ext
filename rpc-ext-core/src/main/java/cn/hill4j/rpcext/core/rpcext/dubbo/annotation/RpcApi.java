@@ -1,9 +1,6 @@
-package cn.hill4j.rpcext.core.rpcext.direct.dubbo.annotation;
+package cn.hill4j.rpcext.core.rpcext.dubbo.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * 2019/8/26 18:35 <br>

@@ -1,14 +1,26 @@
 package cn.hill4j.rpcext.core.utils.test;
 
+import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcApi;
 import cn.hill4j.rpcext.core.utils.AnnotationUtils;
+import cn.hill4j.rpcext.core.utils.ReflectUtils;
 import cn.hill4j.rpcext.core.utils.test.annotation.AnnoTest;
 import cn.hill4j.rpcext.core.utils.test.annotation.PkgNoAnnoTest;
 import cn.hill4j.rpcext.core.utils.test.annotation.test1.test2.PkgNoAnnoTest2;
 import cn.hill4j.rpcext.core.utils.test.annotation.test1.test2.PkgAnnoTest4;
 import cn.hill4j.rpcext.core.utils.test.annotation.test1.test3.PkgAnnoTest5;
 import cn.hill4j.rpcext.core.utils.test.annotation.test1.test3.PkgNoAnnoTest1;
+import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSONObject;
 import org.junit.Test;
 import org.springframework.util.Assert;
+import sun.reflect.annotation.AnnotationParser;
+
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 〈一句话功能简述〉<br>
@@ -42,6 +54,20 @@ public class AnnotationUtilsTest {
 
         AnnoTest annoTestNull = AnnotationUtils.recursionGet(PkgNoAnnoTest.class,AnnoTest.class);
         Assert.isNull(annoTestNull,"");
+    }
+
+    @Test
+    public void createRpcApi () throws Exception {
+        Map<String,Object> paramsMap = new HashMap<>();
+        paramsMap.put("version","1.1.0");
+        paramsMap.put("delay",12);
+        RpcApi rpcApi = AnnotationUtils.createAnnotationObj(RpcApi.class,paramsMap);
+        Assert.isTrue("1.1.0".equals(rpcApi.version()),"");
+
+        Service service = AnnotationUtils.transformToOther(rpcApi,Service.class);
+        Assert.isTrue("1.1.0".equals(service.version()),"");
+
+
     }
 
 }

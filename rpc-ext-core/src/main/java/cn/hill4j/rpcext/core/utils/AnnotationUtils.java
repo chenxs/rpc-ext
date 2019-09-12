@@ -1,10 +1,19 @@
 package cn.hill4j.rpcext.core.utils;
 
+import cn.hill4j.rpcext.core.utils.exception.ReflectException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.ReflectionUtils;
+import sun.reflect.annotation.AnnotationParser;
+import sun.reflect.annotation.AnnotationType;
+
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.lang.annotation.Target;
+import java.lang.reflect.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *  2019/8/25 11:03 <br>
@@ -13,7 +22,11 @@ import java.util.Map;
  * @author hillchen
  */
 public class AnnotationUtils {
+    private  static Logger logger = LoggerFactory.getLogger(AnnotationUtils.class);
     private final static String memberValuesField = "memberValues";
+    private static Class ANNOTATION_INVOCATION_HANDLER_CLAZZ = getAnnotationInvocationHandlerClazz();
+    private static Field ANNOTATION_MEMBER_VALUES_FIELD = getAnnotationMemberValuesGetField();
+    private static Constructor ANNOTATION_INVOCATION_HANDLER_CONSTRUCTOR = getAnnotationInvocationHandlerConstructor();
 
     private AnnotationUtils(){}
 
@@ -85,9 +98,85 @@ public class AnnotationUtils {
      * @param fieldName 需要设置的注解字段名
      * @param FieldVal 需要设置的注解值
      */
-    public static void setAnnotationFieldVal(Object annotationObj,String fieldName , Object FieldVal){
-        InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotationObj);
-        Map<String, Object> memberValues = (Map<String, Object>) ReflectUtils.getBeanFieldVal(invocationHandler,memberValuesField);
-        memberValues.put(fieldName,FieldVal);
+    public static <T extends Annotation> void setAnnotationFieldVal(T annotationObj,String fieldName , Object FieldVal){
+        try {
+            InvocationHandler invocationHandler = Proxy.getInvocationHandler(annotationObj);
+            Map<String, Object> memberValues = (Map<String, Object>) ANNOTATION_MEMBER_VALUES_FIELD.get(invocationHandler);
+            memberValues.put(fieldName,FieldVal);
+        }catch (Exception e){
+            logger.error("setAnnotationFieldVal  erro",e);
+            throw new ReflectException(e);
+        }
+    }
+
+    /**
+     * 创建指定注解对象
+     * @param annotationClass 注解对象类型
+     * @param annotationParams 注解对象属性组
+     * @param <T> 注解对象类型
+     * @return 创建的注解对象
+     */
+    public static <T extends Annotation> T createAnnotationObj (Class<T> annotationClass , final Map<String,Object> annotationParams)  {
+        AnnotationType annotationType = AnnotationType.getInstance(annotationClass);
+        Map<String, Object>  memberDefaults = annotationType.memberDefaults();
+        Map<String, Class<?>>  memberTypes = annotationType.memberTypes();
+        final Map<String, Object>  memberVals = new HashMap<>(memberDefaults.size());
+        if (annotationParams != null){
+            memberDefaults.forEach((key,val) -> {
+                Object paramVal = annotationParams.get(key);
+                Class memberType = memberTypes.get(key);
+                if (paramVal != null && paramVal.getClass().isAssignableFrom(memberType)){
+                    memberVals.put(key,paramVal);
+                }else {
+                    memberVals.put(key,val);
+                }
+            });
+        }
+        return (T)AnnotationParser.annotationForMap(annotationClass,memberVals);
+    }
+
+    /**
+     * 将原注解对象装欢成目标注解对象
+     * @param sourceAnnotation 原注解对象
+     * @param target 目标注解对象类型
+     * @param <S> 原注解对象类型
+     * @param <T> 目标注解对象类型
+     * @return 目标注解对象
+     */
+    public static <S extends Annotation, T extends Annotation> T transformToOther (S sourceAnnotation,Class<T> target) {
+        try {
+            InvocationHandler invocationHandler = Proxy.getInvocationHandler(sourceAnnotation);
+            Map<String, Object> memberValues = (Map<String, Object>)ANNOTATION_MEMBER_VALUES_FIELD.get(invocationHandler);
+            return createAnnotationObj(target,memberValues);
+        }catch (Exception e){
+            logger.error("transformToOther error",e);
+            throw new ReflectException(e);
+        }
+
+    }
+
+    private static Class getAnnotationInvocationHandlerClazz (){
+        try {
+            return   Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
+        }catch (Exception e){
+            logger.error("getAnnotationInvocationHandlerClazz  erro",e);
+            throw new ReflectException(e);
+        }
+    }
+
+    private static Field getAnnotationMemberValuesGetField(){
+        Field field = ReflectionUtils.findField(ANNOTATION_INVOCATION_HANDLER_CLAZZ,memberValuesField);
+        field.setAccessible(true);
+        return field;
+    }
+    private static Constructor getAnnotationInvocationHandlerConstructor(){
+        try {
+            Constructor ctor  = ANNOTATION_INVOCATION_HANDLER_CLAZZ.getDeclaredConstructor(Class.class, Map.class);
+            ctor.setAccessible(true);
+            return ctor;
+        } catch (NoSuchMethodException e) {
+            logger.error("getAnnotationInvocationHandlerConstructor  erro",e);
+            throw new ReflectException(e);
+        }
     }
 }

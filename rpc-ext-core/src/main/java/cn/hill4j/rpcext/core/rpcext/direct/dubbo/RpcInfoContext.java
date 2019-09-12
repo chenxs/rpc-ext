@@ -1,6 +1,6 @@
 package cn.hill4j.rpcext.core.rpcext.direct.dubbo;
 
-import cn.hill4j.rpcext.core.rpcext.direct.dubbo.annotation.RpcInfo;
+import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
 import cn.hill4j.rpcext.core.utils.AnnotationUtils;
 import cn.hill4j.rpcext.core.utils.PackageUtils;
 import cn.hill4j.rpcext.core.utils.ReflectUtils;
@@ -10,6 +10,7 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Objects;
@@ -114,7 +115,7 @@ public class RpcInfoContext {
     public static void resetToDirect(StandardEnvironment env, InjectionMetadata.InjectedElement element){
         String appName = null;
 
-        Object reference = ReflectUtils.getBeanFieldValNoError(element,referenceField);
+        Annotation reference = (Annotation)ReflectUtils.getBeanFieldValNoError(element,referenceField);
         Field field = (Field)ReflectUtils.getBeanFieldValNoError(element,popFieldName);
         if (field != null && reference !=  null ){
             Class fieldClazz = field.getType();
@@ -221,5 +222,9 @@ public class RpcInfoContext {
         } catch (ClassNotFoundException e) {
             return null;
         }
+    }
+
+    private Map<String,Object> getAnnotationDefaultVal(Class<? extends Annotation> annotationClazz){
+        return null;
     }
 }
