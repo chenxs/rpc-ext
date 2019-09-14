@@ -29,17 +29,17 @@ public class DubboUnityConfiguration {
      * dubbo统一服务端服务暴露扩展类
      * @return 构造dubbo统一服务端服务暴露扩展类RpcProviderExportPostProcessor
      */
-    @Bean
+    /*@Bean
     public RpcProviderExportPostProcessor rpcProviderExportPostProcessor(){
         return new RpcProviderExportPostProcessor();
     }
-
+*/
     /**
      *
      * @return 加载带有RpcApi的注解的所有接口
      */
-    @Bean
+    /*@Bean
     public RpcProviderLoadPostProcessor rpcProviderLoadPostProcessor(){
         return new RpcProviderLoadPostProcessor();
-    }
+    }*/
 }

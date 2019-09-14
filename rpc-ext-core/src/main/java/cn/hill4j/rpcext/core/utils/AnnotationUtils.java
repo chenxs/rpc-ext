@@ -8,12 +8,9 @@ import sun.reflect.annotation.AnnotationParser;
 import sun.reflect.annotation.AnnotationType;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.Target;
 import java.lang.reflect.*;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  *  2019/8/25 11:03 <br>
@@ -26,7 +23,6 @@ public class AnnotationUtils {
     private final static String memberValuesField = "memberValues";
     private static Class ANNOTATION_INVOCATION_HANDLER_CLAZZ = getAnnotationInvocationHandlerClazz();
     private static Field ANNOTATION_MEMBER_VALUES_FIELD = getAnnotationMemberValuesGetField();
-    private static Constructor ANNOTATION_INVOCATION_HANDLER_CONSTRUCTOR = getAnnotationInvocationHandlerConstructor();
 
     private AnnotationUtils(){}
 

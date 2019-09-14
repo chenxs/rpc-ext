@@ -1,6 +1,8 @@
 package cn.hill4j.rpcext.core.rpcext.unity.dubbo;
 
+import cn.hill4j.rpcext.core.rpcext.direct.dubbo.RpcInfoContext;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcApi;
+import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
 import cn.hill4j.rpcext.core.utils.AnnotationUtils;
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.config.*;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -22,6 +25,7 @@ import java.util.Set;
  * @author hillchen
  */
 public class RpcProviderExportPostProcessor  implements BeanPostProcessor , DisposableBean , ApplicationContextAware {
+    private Set<String> toProviderAppNames = new HashSet<>();
     private ApplicationContext applicationContext;
     private final Set<ServiceConfig<?>> serviceConfigs = new ConcurrentHashSet<ServiceConfig<?>>();
     @Override
@@ -31,30 +35,39 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        exportToProvider(bean);
+        return bean;
+    }
+
+    private void exportToProvider(Object bean){
         Class beanClazz = bean.getClass();
+        // 通过dubbo service注解已经暴露过了
+        if (beanClazz.isAnnotationPresent(Service.class)){
+            return;
+        }
         Class[] interfaces = beanClazz.getInterfaces();
-        if (interfaces !=  null){
-            for (Class interfaceClazz : interfaces){
-                if (interfaceClazz.isAnnotationPresent(RpcApi.class)){
+        if (interfaces ==  null){
+            return;
+        }
+        for (Class interfaceClazz : interfaces){
+            if (interfaceClazz.isAnnotationPresent(RpcApi.class)
+                && !RpcProviderLoadPostProcessor.hasExported(interfaceClazz)  // 通过xml配置文件暴露过
+            ){
+                RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(interfaceClazz);
+                if (needExport(rpcInfo)){
                     RpcApi rpcApi = (RpcApi) interfaceClazz.getAnnotation(RpcApi.class);
                     Service service = AnnotationUtils.transformToOther(rpcApi,Service.class);
                     exportService(bean,service,interfaceClazz);
                 }
             }
         }
-        // 判断bean是否需要暴露为服务提供者
-        // 封装服务bean的dubbo Service definition信息
-        // 将服务暴露到注册中心
-        return bean;
     }
 
-    private boolean needExport (Object bean, String beanName){
-
-        // bean 是否为RpcApi实现
-        // AnnotationUtils.recursionGet(bea)
-        // bean 是否已经被其他方式暴露过
-
-        return false;
+    private boolean needExport (RpcInfo rpcInfo){
+        if (toProviderAppNames.isEmpty()){
+            return true;
+        }
+        return rpcInfo != null && toProviderAppNames.contains(rpcInfo.appName());
     }
 
     @Override
@@ -119,4 +132,9 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
         return bean;
     }
 
+    public void setToProviderAppNames(Set<String> toProviderAppNames) {
+        if (toProviderAppNames != null){
+            this.toProviderAppNames.addAll(toProviderAppNames);
+        }
+    }
 }
