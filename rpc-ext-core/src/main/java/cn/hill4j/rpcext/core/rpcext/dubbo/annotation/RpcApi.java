@@ -11,6 +11,8 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RpcApi {
+
+    String client() default "";
     /**
      * 服务版本
      * @return 版本号

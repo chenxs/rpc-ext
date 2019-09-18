@@ -3,6 +3,7 @@ package cn.hill4j.rpcext.core.rpcext.direct.dubbo;
 import com.alibaba.dubbo.config.spring.ReferenceBean;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;

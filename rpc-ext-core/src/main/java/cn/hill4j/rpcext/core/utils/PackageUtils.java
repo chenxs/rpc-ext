@@ -1,10 +1,13 @@
 package cn.hill4j.rpcext.core.utils;
 
+import cn.hill4j.rpcext.core.rpcext.ClassPathScanningPackageInfoProvider;
+import org.springframework.core.env.Environment;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import javax.validation.constraints.NotNull;
+import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * 2019/8/25 11:05 <br>
@@ -85,5 +88,40 @@ public class PackageUtils {
         }
         return Package.getPackage(pkgName);
     }
+
+    private static Set<String> getAllParentPackageNames(String pkgName){
+        Set<String> parentPackageNames = new HashSet<>();
+        getAllParentPackageNames(pkgName,parentPackageNames);
+        return parentPackageNames;
+    }
+    private static void getAllParentPackageNames(String pkgName,@NotNull Set<String> parentPackageNames){
+        String parentPackageName = getParentPackageName(pkgName);
+        if (StringUtils.hasText(parentPackageName)){
+            parentPackageNames.add(parentPackageName);
+            getAllParentPackageNames(parentPackageName,parentPackageNames);
+        }
+    }
+    public static Set<Package> getAllPackageInfo(String basePackage, Predicate<Package> filter,Environment environment)  {
+        return new ClassPathScanningPackageInfoProvider(environment).scanPackages(basePackage,filter);
+    }
+
+    public static Set<String> reducePackages(Collection<String> packages){
+        if (!CollectionUtils.isEmpty(packages)){
+            List<String> pkgList = new ArrayList<>(packages);
+            Collections.sort(pkgList);
+
+            final Set<String> reduceResult = new HashSet<>(pkgList.size());
+            pkgList.forEach(packageName -> {
+                Set<String> parentNames = getAllParentPackageNames(packageName);
+
+                if (!CollectionUtils.containsAny(parentNames,reduceResult)){
+                    reduceResult.add(packageName);
+                }
+            });
+            return reduceResult;
+        }
+        return Collections.emptySet();
+    }
+
 
 }

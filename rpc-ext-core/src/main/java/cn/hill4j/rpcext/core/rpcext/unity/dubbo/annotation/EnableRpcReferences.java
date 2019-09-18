@@ -1,5 +1,6 @@
 package cn.hill4j.rpcext.core.rpcext.unity.dubbo.annotation;
 
+import cn.hill4j.rpcext.core.rpcext.unity.dubbo.RpcReferenceRegistrar;
 import com.alibaba.dubbo.config.spring.context.annotation.EnableDubbo;
 import com.alibaba.dubbo.config.spring.context.annotation.EnableDubboConfig;
 import org.springframework.context.annotation.Import;
@@ -8,22 +9,27 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import cn.hill4j.rpcext.core.rpcext.unity.dubbo.RpcProviderRegistrar;
+
 /**
- * 2019/9/14 23:25<br>
- * Description: rpc服务启动标注注解
+ * 2019/9/17 22:34<br>
+ * Description: rpc 引用bean配置信息扫描标注
  *
  * @author hillchen
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @EnableDubboConfig
-@Import(RpcProviderRegistrar.class)
-public @interface EnableRpcProvider {
+@Import(RpcReferenceRegistrar.class)
+public @interface EnableRpcReferences {
     /**
      *
-     * @return 需要将本应用注册为api服务提供者的api应用名列表,如果返回为空则所有被
-     * RpcApi注解标注的接口实现类都会暴露注册中心
+     * @return 需要注册为rpc客户端的应用
      */
-    String[] value() default {};
+    String[] referenceAppNames() default {};
+
+    /**
+     *
+     * @return 开发组织项目的根包列表
+     */
+    String[] orgBasePackages() default {};
 }

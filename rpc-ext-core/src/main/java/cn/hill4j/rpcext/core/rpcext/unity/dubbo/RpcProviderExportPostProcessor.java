@@ -3,16 +3,24 @@ package cn.hill4j.rpcext.core.rpcext.unity.dubbo;
 import cn.hill4j.rpcext.core.rpcext.direct.dubbo.RpcInfoContext;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcApi;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
+import cn.hill4j.rpcext.core.rpcext.unity.dubbo.exception.RpcProviderExportException;
 import cn.hill4j.rpcext.core.utils.AnnotationUtils;
+import cn.hill4j.rpcext.core.utils.ReflectUtils;
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.config.*;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.dubbo.config.spring.ServiceBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,12 +33,19 @@ import java.util.Set;
  * @author hillchen
  */
 public class RpcProviderExportPostProcessor  implements BeanPostProcessor , DisposableBean , ApplicationContextAware {
+    private Logger logger = LoggerFactory.getLogger(RpcProviderExportPostProcessor.class);
     private Set<String> toProviderAppNames = new HashSet<>();
     private ApplicationContext applicationContext;
     private final Set<ServiceConfig<?>> serviceConfigs = new ConcurrentHashSet<ServiceConfig<?>>();
     @Override
     public void destroy() throws Exception {
-
+        for (ServiceConfig<?> serviceConfig : serviceConfigs) {
+            try {
+                serviceConfig.unexport();
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
     }
 
     @Override
@@ -41,29 +56,72 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
 
     private void exportToProvider(Object bean){
         Class beanClazz = bean.getClass();
-        // 通过dubbo service注解已经暴露过了
-        if (beanClazz.isAnnotationPresent(Service.class)){
+        Set<Class> interfaces = ReflectUtils.getAllInterfaces(beanClazz);
+        if (CollectionUtils.isEmpty(interfaces)){
             return;
         }
-        Class[] interfaces = beanClazz.getInterfaces();
-        if (interfaces ==  null){
-            return;
-        }
+        Set<Class> exportInterfaceClazzs = initExportedInterfaces(beanClazz, interfaces);
+
         for (Class interfaceClazz : interfaces){
-            if (interfaceClazz.isAnnotationPresent(RpcApi.class)
-                && !RpcProviderLoadPostProcessor.hasExported(interfaceClazz)  // 通过xml配置文件暴露过
-            ){
-                RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(interfaceClazz);
-                if (needExport(rpcInfo)){
-                    RpcApi rpcApi = (RpcApi) interfaceClazz.getAnnotation(RpcApi.class);
-                    Service service = AnnotationUtils.transformToOther(rpcApi,Service.class);
-                    exportService(bean,service,interfaceClazz);
+            if (interfaceClazz.isAnnotationPresent(RpcApi.class)){
+                if (!hasExported(interfaceClazz,exportInterfaceClazzs)){
+                    exportRpcProvider(bean, interfaceClazz);
                 }
+                exportInterfaceClazzs.add(interfaceClazz);
             }
         }
     }
 
-    private boolean needExport (RpcInfo rpcInfo){
+    /**
+     * 初始化已经导出为服务提供者的接口列表
+     * @param beanClazz 当前bean类
+     * @param interfaces bean实现的接口列表
+     * @return 已经导出为服务提供者的接口列表
+     */
+    private Set<Class> initExportedInterfaces(Class beanClazz, Set<Class> interfaces) {
+        Set<Class> exportInterfaceClazzs = new HashSet<>();
+        Class  dubboServiceInterface = getDubboServiceInterface(beanClazz);
+        if (dubboServiceInterface != null){
+            exportInterfaceClazzs.add(dubboServiceInterface);
+        }
+        for (Class interfaceClazz : interfaces){
+            if (RpcProviderLoadPostProcessor.hasExported(interfaceClazz)){
+                exportInterfaceClazzs.add(interfaceClazz);
+            }
+        }
+        return exportInterfaceClazzs;
+    }
+
+    /**
+     * 将bean对象导出为指定接口的rpc服务类
+     * @param bean 服务bean
+     * @param interfaceClazz rpc接口
+     */
+    private void exportRpcProvider(Object bean, Class interfaceClazz) {
+        RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(interfaceClazz);
+        if (needExportProvider(rpcInfo)){
+            RpcApi rpcApi = (RpcApi) interfaceClazz.getAnnotation(RpcApi.class);
+            Service service = AnnotationUtils.transformToOther(rpcApi,Service.class);
+            exportService(bean,service,interfaceClazz);
+        }
+    }
+
+    /**
+     * 判断自定rpc接口是否已经导出过服务
+     * @param interfaceClazz rpc接口
+     * @param exportInterfaceClazzs 已导出rpc接口
+     * @return
+     */
+    private boolean hasExported (@NotNull Class interfaceClazz, @NotNull Set<Class> exportInterfaceClazzs ){
+        for (Class clazz: exportInterfaceClazzs){
+            if (interfaceClazz.isAssignableFrom(clazz)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean needExportProvider (RpcInfo rpcInfo){
         if (toProviderAppNames.isEmpty()){
             return true;
         }
@@ -136,5 +194,23 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
         if (toProviderAppNames != null){
             this.toProviderAppNames.addAll(toProviderAppNames);
         }
+    }
+
+    private Class getDubboServiceInterface (Class beanClazz){
+        if (beanClazz.isAnnotationPresent(Service.class)){
+            Service service = (Service) beanClazz.getAnnotation(Service.class);
+            if (service.interfaceClass() != null && !void.class.equals(service.interfaceClass())){
+                return service.interfaceClass();
+            }else if(StringUtils.hasText(service.interfaceName())){
+                try{
+                    return Class.forName(service.interfaceName());
+                }catch (Exception e){
+                    throw new RpcProviderExportException("dubbo service interfaceName error",e);
+                }
+            }else if (beanClazz.getInterfaces().length > 0) {
+                return beanClazz.getInterfaces()[0];
+            }
+        }
+        return null;
     }
 }

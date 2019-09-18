@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ProcessorResortConfiguration {
     @Bean
-    @ConditionalOnBean(ProcessorResort.class)
     public ResetSortPostProcessor ResetSortPostProcessor(){
         return new ResetSortPostProcessor();
     }

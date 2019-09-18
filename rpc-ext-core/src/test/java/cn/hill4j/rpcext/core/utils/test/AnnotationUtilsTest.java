@@ -2,7 +2,6 @@ package cn.hill4j.rpcext.core.utils.test;
 
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcApi;
 import cn.hill4j.rpcext.core.utils.AnnotationUtils;
-import cn.hill4j.rpcext.core.utils.ReflectUtils;
 import cn.hill4j.rpcext.core.utils.test.annotation.AnnoTest;
 import cn.hill4j.rpcext.core.utils.test.annotation.PkgNoAnnoTest;
 import cn.hill4j.rpcext.core.utils.test.annotation.test1.test2.PkgNoAnnoTest2;
@@ -10,15 +9,10 @@ import cn.hill4j.rpcext.core.utils.test.annotation.test1.test2.PkgAnnoTest4;
 import cn.hill4j.rpcext.core.utils.test.annotation.test1.test3.PkgAnnoTest5;
 import cn.hill4j.rpcext.core.utils.test.annotation.test1.test3.PkgNoAnnoTest1;
 import com.alibaba.dubbo.config.annotation.Service;
-import com.alibaba.fastjson.JSONObject;
 import org.junit.Test;
 import org.springframework.util.Assert;
-import sun.reflect.annotation.AnnotationParser;
-
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
-import java.lang.ref.SoftReference;
-import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,6 +61,18 @@ public class AnnotationUtilsTest {
         Service service = AnnotationUtils.transformToOther(rpcApi,Service.class);
         Assert.isTrue("1.1.0".equals(service.version()),"");
 
+
+    }
+
+    @Test
+    public void bigDecimalTest(){
+        BigDecimal bigDecimal1= new BigDecimal("12745.12345").setScale(2, RoundingMode.DOWN);
+        BigDecimal bigDecimal2= new BigDecimal("12745.125").setScale(2, RoundingMode.DOWN);
+        BigDecimal bigDecimal3= new BigDecimal("12745.124").setScale(2, RoundingMode.DOWN);
+
+        BigDecimal bigDecimal = bigDecimal1.add(bigDecimal2).add(bigDecimal3);
+
+        System.out.println(bigDecimal.doubleValue());
 
     }
 

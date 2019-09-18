@@ -6,6 +6,7 @@ import cn.hill4j.rpcext.core.rpcext.direct.dubbo.AnnotationReferenceBeanDefiniti
 import cn.hill4j.rpcext.core.rpcext.direct.dubbo.XmlReferenceBeanDefinitionReset;
 import cn.hill4j.rpcext.core.rpcext.unity.dubbo.RpcProviderExportPostProcessor;
 import cn.hill4j.rpcext.core.rpcext.unity.dubbo.RpcProviderLoadPostProcessor;
+import cn.hill4j.rpcext.core.rpcext.unity.dubbo.RpcReferencPostProcessor;
 import com.alibaba.dubbo.config.spring.AnnotationBean;
 import com.alibaba.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor;
 import com.alibaba.dubbo.config.spring.schema.DubboNamespaceHandler;
@@ -25,6 +26,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConditionalOnClass({DubboNamespaceHandler.class})
 public class DubboUnityConfiguration {
+    /*@Bean
+    public RpcReferencPostProcessor rpcReferencPostProcessor(){
+        return new RpcReferencPostProcessor();
+    }*/
     /**
      * dubbo统一服务端服务暴露扩展类
      * @return 构造dubbo统一服务端服务暴露扩展类RpcProviderExportPostProcessor

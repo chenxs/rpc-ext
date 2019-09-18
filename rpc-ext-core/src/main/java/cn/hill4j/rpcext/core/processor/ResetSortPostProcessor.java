@@ -29,14 +29,14 @@ public class ResetSortPostProcessor implements MergedBeanDefinitionPostProcessor
     public synchronized void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
         if (!hasResetSort){
             hasResetSort = true;
-            Map<String, ProcessorResort> ProcessorResters =  applicationContext.getBeansOfType(ProcessorResort.class);
-            if (CollectionUtils.isEmpty(ProcessorResters)){
+            Map<String, ProcessorResort> processorResters =  applicationContext.getBeansOfType(ProcessorResort.class);
+            if (CollectionUtils.isEmpty(processorResters)){
                 return;
             }else {
                 Object beanFactory = ReflectUtils.getBeanFieldValNoError(applicationContext,"beanFactory");
                 if (beanFactory != null){
                     List<BeanPostProcessor> beanPostProcessors = (List<BeanPostProcessor>)ReflectUtils.getBeanFieldValNoError(beanFactory,"beanPostProcessors");
-                    ProcessorResters.values()
+                    processorResters.values()
                             .stream()
                             .forEach(processorRester -> resetPostProcessor(processorRester,beanPostProcessors));
                 }
