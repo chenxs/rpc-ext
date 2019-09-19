@@ -31,5 +31,5 @@ public @interface EnableRpcReferences {
      *
      * @return 开发组织项目的根包列表
      */
-    String[] orgBasePackages() default {};
+    String[] basePackages() default {};
 }

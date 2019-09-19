@@ -12,12 +12,14 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -50,12 +52,32 @@ public class RpcInfoContext {
      * @param interfaceClazz 接口类型
      * @return 该类/包或祖宗包上第一次出现RpcInfo的注解对象，否则返回null,同时将RpcInfo对象存到上下文缓存中
      */
-    public static RpcInfo getAppRpcInfo(Class interfaceClazz) {
-        String interfaceName = interfaceClazz.getName();
+    public static RpcInfo getAppRpcInfo(@NotNull final Class interfaceClazz) {
+        return getAppRpcInfo(() -> interfaceClazz.getName(),
+                () -> AnnotationUtils.recursionGet(interfaceClazz, RpcInfo.class));
+    }
+
+    /**
+     * 获取接口上的RpcInfo注解
+     * @param interfaceName 接口类型
+     * @return 该类/包或祖宗包上第一次出现RpcInfo的注解对象，否则返回null,同时将RpcInfo对象存到上下文缓存中
+     */
+    public static RpcInfo getAppRpcInfo(@NotNull final String interfaceName) {
+        return getAppRpcInfo(() -> interfaceName, () -> {
+            try {
+                return AnnotationUtils.recursionGet(interfaceName, RpcInfo.class);
+            } catch (ClassNotFoundException e) {
+                return null;
+            }
+        });
+    }
+
+    private static RpcInfo getAppRpcInfo(Supplier<String> interfaceNameSupplier,Supplier<RpcInfo> rpcInfoSupplier){
+        String interfaceName = interfaceNameSupplier.get();
         if (rpcInfoMap.containsKey(interfaceName)){
             return rpcInfoMap.get(interfaceName).orElse(null);
         }else {
-            RpcInfo rpcInfo = AnnotationUtils.recursionGet(interfaceClazz, RpcInfo.class);
+            RpcInfo rpcInfo = rpcInfoSupplier.get();
             rpcInfoMap.putIfAbsent(interfaceName,Optional.ofNullable(rpcInfo));
             return rpcInfo;
         }

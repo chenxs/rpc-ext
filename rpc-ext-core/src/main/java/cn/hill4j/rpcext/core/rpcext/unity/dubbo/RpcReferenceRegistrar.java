@@ -1,6 +1,7 @@
 package cn.hill4j.rpcext.core.rpcext.unity.dubbo;
 
 import cn.hill4j.rpcext.core.rpcext.ClassPathScanningPackageInfoProvider;
+import cn.hill4j.rpcext.core.rpcext.direct.dubbo.RpcInfoContext;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcApi;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
 import cn.hill4j.rpcext.core.rpcext.unity.dubbo.annotation.EnableRpcProvider;
@@ -19,14 +20,18 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import cn.hill4j.rpcext.core.rpcext.unity.dubbo.annotation.EnableRpcReferences;
+import org.springframework.core.type.ClassMetadata;
+import org.springframework.core.type.classreading.MetadataReader;
+import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import sun.reflect.annotation.AnnotationType;
 
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * 2019/9/11 15:54<br>
@@ -46,14 +51,35 @@ public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
 
     public void registerRpcReferences(AnnotationMetadata metadata,
                                      BeanDefinitionRegistry registry){
+        AnnotationAttributes referenceAttrs = AnnotationAttributes.fromMap(
+                metadata.getAnnotationAttributes(EnableRpcReferences.class.getName()));
+        if (referenceAttrs == null){
+            return;
+        }
+        Set<String> referenceAppNames = new HashSet<>(Arrays.asList(referenceAttrs.getStringArray("referenceAppNames")));
+
         // 获取类扫描器
         ClassPathScanningPackageInfoProvider scanner = new ClassPathScanningPackageInfoProvider(environment);
         scanner.setResourceLoader(this.resourceLoader);
-        Set<String> scanBasePackages = getBasePackages(metadata,scanner);
+
+
+        AnnotationAttributes providerAttrs = AnnotationAttributes.fromMap(
+                metadata.getAnnotationAttributes(EnableRpcProvider.class.getName()));
+
+        Set<String> providerAppNames;
+        if (providerAttrs != null){
+            providerAppNames = new HashSet<>(Arrays.asList(providerAttrs.getStringArray("value")));
+        }else {
+            providerAppNames = new HashSet<>();
+        }
+
+        ReferenceBeanFilter referenceBeanFilter = new ReferenceBeanFilter(referenceAppNames, providerAppNames);
         AnnotationTypeFilter annotationTypeFilter = new AnnotationTypeFilter(
                 RpcApi.class);
-        scanner.addIncludeFilter(annotationTypeFilter);
 
+        scanner.addIncludeFilter(new AllTypeFilter(Arrays.asList(annotationTypeFilter,referenceBeanFilter)));
+
+        Set<String> scanBasePackages = getBasePackages(metadata,referenceAttrs);
         for (String basePackage : scanBasePackages) {
             Set<BeanDefinition> candidateComponents = scanner
                     .findCandidateComponents(basePackage);
@@ -68,13 +94,13 @@ public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
                     Map<String, Object> attributes = annotationMetadata
                             .getAnnotationAttributes(
                                     RpcApi.class.getCanonicalName());
-                    registerFeignClient(registry,annotationMetadata,attributes);
+                    registerReferenceBean(registry,annotationMetadata,attributes);
                 }
             }
         }
     }
 
-    private void registerFeignClient(BeanDefinitionRegistry registry,
+    private void registerReferenceBean(BeanDefinitionRegistry registry,
                                      AnnotationMetadata annotationMetadata, Map<String, Object> attributes){
         final Set<String> referenceAttrNames = getReferenceAttrNames();
         String className = annotationMetadata.getClassName();
@@ -104,58 +130,27 @@ public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
         this.resourceLoader = resourceLoader;
     }
 
-    private Set<String> getBasePackages(AnnotationMetadata metadata, ClassPathScanningPackageInfoProvider classPathScanningPackinfoProvider){
-
-        AnnotationAttributes providerAttrs = AnnotationAttributes.fromMap(
-                metadata.getAnnotationAttributes(EnableRpcProvider.class.getName()));
-        AnnotationAttributes referenceAttrs = AnnotationAttributes.fromMap(
-                metadata.getAnnotationAttributes(EnableRpcReferences.class.getName()));
-
-        String[] providerAppNames = null;
-        String[] referenceAppNames = null;
-        String[] orgBasePackages = null;
-        if (providerAttrs != null){
-            providerAppNames = (String[] ) providerAttrs.get("value");
-        }
+    private Set<String> getBasePackages(AnnotationMetadata metadata,AnnotationAttributes referenceAttrs){
+        String[] basePackages = null;
         if (referenceAttrs != null){
-            referenceAppNames = (String[] ) referenceAttrs.get("referenceAppNames");
-            orgBasePackages = (String[] ) referenceAttrs.get("orgBasePackages");
+            basePackages = (String[] ) referenceAttrs.get("basePackages");
         }
 
-        List<String> rpcInfoScanPackageNames ;
+        List<String> scanPackageNames ;
 
-        if (orgBasePackages != null){
-            rpcInfoScanPackageNames = Arrays.asList(orgBasePackages);
+        if (basePackages != null){
+            scanPackageNames = Arrays.asList(basePackages);
         }else {
-            rpcInfoScanPackageNames = Collections.emptyList();
+            scanPackageNames = Arrays.asList(ClassUtils.getPackageName(metadata.getClassName()));
         }
-        Set<Package> rpcInfoPackages = classPathScanningPackinfoProvider.scanPackages(rpcInfoScanPackageNames,pkg -> pkg.isAnnotationPresent(RpcInfo.class));
-        if (CollectionUtils.isEmpty(rpcInfoPackages)){
-            return PackageUtils.reducePackages(rpcInfoScanPackageNames);
-        }else{
-            Map<String,Package> rpcInfoMap = rpcInfoPackages
-                    .stream()
-                    .collect(Collectors.toMap(
-                            pkg -> pkg.getAnnotation(RpcInfo.class).appName(),
-                            pkg -> pkg
-                    ));
 
-            Set<String> rpcApiBasePackages = new HashSet<>();
-            final Set<String> needFilterAppName = new HashSet<>();
-            if (providerAppNames != null){
-                Stream.of(providerAppNames).forEach(appName -> needFilterAppName.add(appName));
-            }
-
-            if (referenceAppNames != null){
-                rpcApiBasePackages = Stream.of(referenceAppNames).filter(appName -> !needFilterAppName.contains(appName))
-                        .filter(appName -> rpcInfoMap.containsKey(appName))
-                        .map(appName -> rpcInfoMap.get(appName).getName())
-                        .collect(Collectors.toSet());
-            }
-            return PackageUtils.reducePackages(rpcApiBasePackages);
-        }
+        return PackageUtils.reducePackages(scanPackageNames);
     }
 
+    /**
+     *
+     * @return 获取构造referenceBean的BeanDefinition所需要的属性字段名
+     */
     private Set<String> getReferenceAttrNames(){
         if (referenceAttrNames == null){
             referenceAttrNames = AnnotationType.getInstance(Reference.class).memberTypes().keySet();
@@ -165,4 +160,54 @@ public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
         return referenceAttrNames;
     }
 
+    private class ReferenceBeanFilter implements TypeFilter {
+        private Set<String> includeAppNames;
+        private Set<String> excludeAppNames;
+
+        public ReferenceBeanFilter(Set<String> includeAppNames, Set<String> excludeAppNames) {
+            this.includeAppNames = includeAppNames;
+            this.excludeAppNames = excludeAppNames;
+        }
+
+        @Override
+        public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
+            ClassMetadata classMetadata = metadataReader.getClassMetadata();
+            String className = classMetadata.getClassName();
+            RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(className);
+            if (rpcInfo != null){
+                String currentAppName = rpcInfo.appName();
+                if (excludeAppNames.contains(currentAppName)){
+                    return false;
+                }
+                if (CollectionUtils.isEmpty(includeAppNames)){
+                    return true;
+                }
+                return includeAppNames.contains(currentAppName);
+            }else {
+                return CollectionUtils.isEmpty(includeAppNames);
+            }
+        }
+    }
+
+    private static class AllTypeFilter implements TypeFilter {
+
+        private final List<TypeFilter> delegates;
+
+        public AllTypeFilter(List<TypeFilter> delegates) {
+            Assert.notNull(delegates, "This argument is required, it must not be null");
+            this.delegates = delegates;
+        }
+
+        @Override
+        public boolean match(MetadataReader metadataReader,
+                             MetadataReaderFactory metadataReaderFactory) throws IOException {
+
+            for (TypeFilter filter : this.delegates) {
+                if (!filter.match(metadataReader, metadataReaderFactory)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 }
