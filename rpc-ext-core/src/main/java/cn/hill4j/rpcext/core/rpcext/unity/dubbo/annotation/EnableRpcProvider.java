@@ -26,4 +26,22 @@ public @interface EnableRpcProvider {
      * RpcApi注解标注的接口实现类都会暴露注册中心
      */
     String[] value() default {};
+
+    /**
+     *
+     * @return 扫描指定包下所有被RpcApi标注的接口暴露为rpc服务
+     */
+    String[] basePackages() default{};
+
+    /**
+     *
+     * @return 不需要暴露为rpc服务的应用名集合
+     */
+    String[] excludedAppNames() default {};
+
+    /**
+     *
+     * @return 不需要暴露为rpc服务的包集合
+     */
+    String[] excludedPackages() default {};
 }

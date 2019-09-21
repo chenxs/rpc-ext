@@ -1,6 +1,7 @@
 package cn.hill4j.rpcext.core.rpcext.unity.dubbo;
 
 import cn.hill4j.rpcext.core.rpcext.unity.dubbo.annotation.EnableRpcProvider;
+import cn.hill4j.rpcext.core.utils.PackageUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -16,9 +17,10 @@ import java.util.*;
  *
  * @author hillchen
  */
-public class RpcProviderRegistrar implements ImportBeanDefinitionRegistrar {
+public class RpcProviderRegistrar extends RpcRegistrar implements ImportBeanDefinitionRegistrar {
     private final String rpcProviderExportBeanName = "rpcProviderExportPostProcessor";
     private final String rpcProviderLoadBeanName = "rpcProviderLoadPostProcessor";
+    private final String rpcExportBeanFactoryRestorBeanName = "rpcExportBeanFactoryRestor";
     /**
      * 校验上下文中是否有依赖dubbo
      */
@@ -26,13 +28,21 @@ public class RpcProviderRegistrar implements ImportBeanDefinitionRegistrar {
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-
-
         if(isLoader(dubboLoaderCheckClassName)){
             if (!registry.containsBeanDefinition(rpcProviderExportBeanName)){
-                Set<String> toProviderAppNames = getToProviderAppNames(importingClassMetadata);
+                AnnotationAttributes attributes = AnnotationAttributes.fromMap(
+                        importingClassMetadata.getAnnotationAttributes(EnableRpcProvider.class.getName()));
+
+                Set<String> toProviderAppNames = getAttributesToSet(attributes,"value");
+                Set<String> basePackages = PackageUtils.reducePackages(getAttributesToSet(attributes,"basePackages"));
+                Set<String> excludedAppNames = getAttributesToSet(attributes,"excludedAppNames");
+                Set<String> excludedPackages = PackageUtils.reducePackages(getAttributesToSet(attributes,"excludedPackages"));
+
                 BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(RpcProviderExportPostProcessor.class).getBeanDefinition();
                 beanDefinition.getPropertyValues().add("toProviderAppNames", toProviderAppNames);
+                beanDefinition.getPropertyValues().add("basePackages", basePackages);
+                beanDefinition.getPropertyValues().add("excludedAppNames", excludedAppNames);
+                beanDefinition.getPropertyValues().add("excludedPackages", excludedPackages);
                 registry.registerBeanDefinition(rpcProviderExportBeanName,beanDefinition);
             }
 
@@ -41,24 +51,10 @@ public class RpcProviderRegistrar implements ImportBeanDefinitionRegistrar {
                 registry.registerBeanDefinition(rpcProviderLoadBeanName,beanDefinition);
             }
 
-        }
-
-    }
-
-    private Set<String> getToProviderAppNames(AnnotationMetadata importingClassMetadata){
-        AnnotationAttributes attributes = AnnotationAttributes.fromMap(
-                importingClassMetadata.getAnnotationAttributes(EnableRpcProvider.class.getName()));
-        String[] appNames = attributes.getStringArray("value");
-        return new HashSet<>(Arrays.asList(appNames));
-    }
-
-    private boolean isLoader(String className){
-        ClassLoader classLoader = RpcProviderRegistrar.class.getClassLoader();
-        try {
-            classLoader.loadClass(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+            if (!registry.containsBeanDefinition(rpcExportBeanFactoryRestorBeanName)){
+                BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(RpcExportBeanFactoryRestor.class).getBeanDefinition();
+                registry.registerBeanDefinition(rpcExportBeanFactoryRestorBeanName,beanDefinition);
+            }
         }
     }
 }

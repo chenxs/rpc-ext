@@ -32,4 +32,17 @@ public @interface EnableRpcReferences {
      * @return 开发组织项目的根包列表
      */
     String[] basePackages() default {};
+
+
+    /**
+     *
+     * @return 不需要注册为rpc服务引用的的应用名集合
+     */
+    String[] excludedAppNames() default {};
+
+    /**
+     *
+     * @return 不需要注册为rpc服务引用的包集合
+     */
+    String[] excludedPackages() default {};
 }

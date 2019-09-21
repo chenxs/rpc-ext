@@ -4,7 +4,6 @@ import cn.hill4j.rpcext.core.rpcext.ClassPathScanningPackageInfoProvider;
 import cn.hill4j.rpcext.core.rpcext.direct.dubbo.RpcInfoContext;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcApi;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
-import cn.hill4j.rpcext.core.rpcext.unity.dubbo.annotation.EnableRpcProvider;
 import cn.hill4j.rpcext.core.utils.PackageUtils;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.spring.ReferenceBean;
@@ -39,7 +38,7 @@ import java.util.*;
  *
  * @author hillchen
  */
-public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
+public class RpcReferenceRegistrar extends RpcRegistrar implements ImportBeanDefinitionRegistrar ,
         ResourceLoaderAware, EnvironmentAware {
     private ResourceLoader resourceLoader;
     private Set<String> referenceAttrNames;
@@ -56,24 +55,15 @@ public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
         if (referenceAttrs == null){
             return;
         }
-        Set<String> referenceAppNames = new HashSet<>(Arrays.asList(referenceAttrs.getStringArray("referenceAppNames")));
+        Set<String> referenceAppNames = getAttributesToSet(referenceAttrs,"referenceAppNames");
+        Set<String> excludedAppNames = getAttributesToSet(referenceAttrs,"excludedAppNames");
+        Set<String> excludedPackages = PackageUtils.reducePackages(getAttributesToSet(referenceAttrs,"excludedPackages"));
 
         // 获取类扫描器
         ClassPathScanningPackageInfoProvider scanner = new ClassPathScanningPackageInfoProvider(environment);
         scanner.setResourceLoader(this.resourceLoader);
 
-
-        AnnotationAttributes providerAttrs = AnnotationAttributes.fromMap(
-                metadata.getAnnotationAttributes(EnableRpcProvider.class.getName()));
-
-        Set<String> providerAppNames;
-        if (providerAttrs != null){
-            providerAppNames = new HashSet<>(Arrays.asList(providerAttrs.getStringArray("value")));
-        }else {
-            providerAppNames = new HashSet<>();
-        }
-
-        ReferenceBeanFilter referenceBeanFilter = new ReferenceBeanFilter(referenceAppNames, providerAppNames);
+        ReferenceBeanFilter referenceBeanFilter = new ReferenceBeanFilter(referenceAppNames, excludedAppNames,excludedPackages);
         AnnotationTypeFilter annotationTypeFilter = new AnnotationTypeFilter(
                 RpcApi.class);
 
@@ -131,20 +121,13 @@ public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
     }
 
     private Set<String> getBasePackages(AnnotationMetadata metadata,AnnotationAttributes referenceAttrs){
-        String[] basePackages = null;
-        if (referenceAttrs != null){
-            basePackages = (String[] ) referenceAttrs.get("basePackages");
-        }
+        Set<String> scanPackageNames = getAttributesToSet(referenceAttrs,"basePackages");
 
-        List<String> scanPackageNames ;
-
-        if (basePackages != null){
-            scanPackageNames = Arrays.asList(basePackages);
+        if (CollectionUtils.isEmpty(scanPackageNames)){
+           return new HashSet<>(Arrays.asList(ClassUtils.getPackageName(metadata.getClassName())));
         }else {
-            scanPackageNames = Arrays.asList(ClassUtils.getPackageName(metadata.getClassName()));
+            return PackageUtils.reducePackages(scanPackageNames);
         }
-
-        return PackageUtils.reducePackages(scanPackageNames);
     }
 
     /**
@@ -163,16 +146,22 @@ public class RpcReferenceRegistrar implements ImportBeanDefinitionRegistrar ,
     private class ReferenceBeanFilter implements TypeFilter {
         private Set<String> includeAppNames;
         private Set<String> excludeAppNames;
+        private  Set<String> excludedPackages;
 
-        public ReferenceBeanFilter(Set<String> includeAppNames, Set<String> excludeAppNames) {
+        public ReferenceBeanFilter(Set<String> includeAppNames, Set<String> excludeAppNames,Set<String> excludedPackages) {
             this.includeAppNames = includeAppNames;
             this.excludeAppNames = excludeAppNames;
+            this.excludedPackages = excludedPackages;
         }
 
         @Override
         public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
             ClassMetadata classMetadata = metadataReader.getClassMetadata();
             String className = classMetadata.getClassName();
+            Set<String> parentPackageNames = PackageUtils.getAllParentPackageNames(className);
+            if (CollectionUtils.containsAny(parentPackageNames,excludedPackages)){
+                return false;
+            }
             RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(className);
             if (rpcInfo != null){
                 String currentAppName = rpcInfo.appName();

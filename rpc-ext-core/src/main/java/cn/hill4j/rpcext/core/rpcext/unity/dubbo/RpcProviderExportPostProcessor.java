@@ -5,6 +5,7 @@ import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcApi;
 import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
 import cn.hill4j.rpcext.core.rpcext.unity.dubbo.exception.RpcProviderExportException;
 import cn.hill4j.rpcext.core.utils.AnnotationUtils;
+import cn.hill4j.rpcext.core.utils.PackageUtils;
 import cn.hill4j.rpcext.core.utils.ReflectUtils;
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.config.*;
@@ -35,6 +36,10 @@ import java.util.Set;
 public class RpcProviderExportPostProcessor  implements BeanPostProcessor , DisposableBean , ApplicationContextAware {
     private Logger logger = LoggerFactory.getLogger(RpcProviderExportPostProcessor.class);
     private Set<String> toProviderAppNames = new HashSet<>();
+    private Set<String> basePackages = new HashSet<>();
+    private Set<String> excludedAppNames = new HashSet<>();
+    private Set<String> excludedPackages = new HashSet<>();
+
     private ApplicationContext applicationContext;
     private final Set<ServiceConfig<?>> serviceConfigs = new ConcurrentHashSet<ServiceConfig<?>>();
     @Override
@@ -99,7 +104,7 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
      */
     private void exportRpcProvider(Object bean, Class interfaceClazz) {
         RpcInfo rpcInfo = RpcInfoContext.getAppRpcInfo(interfaceClazz);
-        if (needExportProvider(rpcInfo)){
+        if (needExportProvider(rpcInfo,interfaceClazz)){
             RpcApi rpcApi = (RpcApi) interfaceClazz.getAnnotation(RpcApi.class);
             Service service = AnnotationUtils.transformToOther(rpcApi,Service.class);
             exportService(bean,service,interfaceClazz);
@@ -121,11 +126,25 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
         return false;
     }
 
-    private boolean needExportProvider (RpcInfo rpcInfo){
-        if (toProviderAppNames.isEmpty()){
+    private boolean needExportProvider (RpcInfo rpcInfo,@NotNull Class interfaceClazz){
+        Set<String> parentPackages = PackageUtils.getAllParentPackageNames(interfaceClazz);
+        if (matchPackageOrAppName(rpcInfo,parentPackages,excludedAppNames,excludedPackages)){
+            return false;
+        }
+        if (toProviderAppNames.isEmpty() && basePackages.isEmpty()){
             return true;
         }
-        return rpcInfo != null && toProviderAppNames.contains(rpcInfo.appName());
+        return matchPackageOrAppName(rpcInfo,parentPackages,toProviderAppNames,basePackages);
+    }
+
+    private boolean matchPackageOrAppName(RpcInfo rpcInfo,@NotNull Set<String> parentPackages,@NotNull Set<String> matchAppNames,@NotNull Set<String> matchPackages){
+        if (CollectionUtils.containsAny(parentPackages,matchPackages)){
+            return true;
+        }
+        if (rpcInfo != null){
+            return matchAppNames.contains(rpcInfo.appName());
+        }
+        return false;
     }
 
     @Override
@@ -194,6 +213,18 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
         if (toProviderAppNames != null){
             this.toProviderAppNames.addAll(toProviderAppNames);
         }
+    }
+
+    public void setBasePackages(Set<String> basePackages) {
+        this.basePackages = basePackages;
+    }
+
+    public void setExcludedAppNames(Set<String> excludedAppNames) {
+        this.excludedAppNames = excludedAppNames;
+    }
+
+    public void setExcludedPackages(Set<String> excludedPackages) {
+        this.excludedPackages = excludedPackages;
     }
 
     private Class getDubboServiceInterface (Class beanClazz){

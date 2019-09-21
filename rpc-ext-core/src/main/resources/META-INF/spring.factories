@@ -1,5 +1,4 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   cn.hill4j.rpcext.core.processor.configuration.ProcessorResortConfiguration,\
-  cn.hill4j.rpcext.core.rpcext.direct.dubbo.configuration.DubboRpcExtConfiguration,\
-  cn.hill4j.rpcext.core.rpcext.unity.dubbo.configuration.DubboUnityConfiguration
+  cn.hill4j.rpcext.core.rpcext.direct.dubbo.configuration.DubboRpcExtConfiguration

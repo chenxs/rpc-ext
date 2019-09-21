@@ -89,8 +89,26 @@ public class PackageUtils {
         return Package.getPackage(pkgName);
     }
 
-    private static Set<String> getAllParentPackageNames(String pkgName){
-        Set<String> parentPackageNames = new HashSet<>();
+    /**
+     * 获取指定类的包名已经所有父包名
+     * @param clazz 指定类
+     * @return 类的包名已经所有父包名
+     */
+    public static Set<String> getAllParentPackageNames(@NotNull Class clazz){
+        Set<String> parentPackageNames = new LinkedHashSet<>();
+        String pkgName = clazz.getPackage().getName();
+        parentPackageNames.add(pkgName);
+        getAllParentPackageNames(pkgName,parentPackageNames);
+        return parentPackageNames;
+    }
+
+    /**
+     * 获取指定包名的所有父包名
+     * @param pkgName 指定包名
+     * @return 所有父包名
+     */
+    public static Set<String> getAllParentPackageNames(String pkgName){
+        Set<String> parentPackageNames = new LinkedHashSet<>();
         getAllParentPackageNames(pkgName,parentPackageNames);
         return parentPackageNames;
     }
