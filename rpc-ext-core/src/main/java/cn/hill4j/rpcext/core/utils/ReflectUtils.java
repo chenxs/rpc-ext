@@ -66,8 +66,9 @@ public class ReflectUtils {
      * 通过反射获取指定bean上指定字段的值，即使是私有字段也是可以获取到的
      * 如果获取失败则抛出异常com.hill.rpc.ext.core.utils.exception.ReflectException
      * @param bean bean对象
-     * @param fieldName 需要获取字段值的字段名
-     * @return 字段值
+     * @param fieldName 需要设值的字段名
+     * @param value 需要设值的字段值
+     *
      */
     public static void setBeanFieldVal(Object bean, String fieldName,Object value){
         try {

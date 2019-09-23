@@ -93,6 +93,7 @@ public class AnnotationUtils {
      * @param annotationObj 注解对象
      * @param fieldName 需要设置的注解字段名
      * @param FieldVal 需要设置的注解值
+     * @param <T> 需要设值的注解类型
      */
     public static <T extends Annotation> void setAnnotationFieldVal(T annotationObj,String fieldName , Object FieldVal){
         try {
