@@ -4,7 +4,7 @@
 
     <groupId>cn.hill4j.rpcext</groupId>
     <artifactId>rpc-ext</artifactId>
-    <version>1.2</version>
+    <version>1.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <parent>
@@ -77,7 +77,7 @@
         <url>https://github.com/chenxs/rpc-ext.git</url>
         <connection>https://github.com/chenxs/rpc-ext.git</connection>
         <developerConnection>scm:git:https://github.com/chenxs/rpc-ext.git</developerConnection>
-      <tag>rpc-ext-1.2</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <developers>
