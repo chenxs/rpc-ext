@@ -78,7 +78,7 @@
     <scm>
         <url>https://github.com/chenxs/rpc-ext.git</url>
         <connection>https://github.com/chenxs/rpc-ext.git</connection>
-        <developerConnection>https://github.com/chenxs/rpc-ext/blob/master/README.md</developerConnection>
+        <developerConnection>scm:git:https://github.com/chenxs/rpc-ext.git</developerConnection>
     </scm>
 
     <developers>
@@ -141,6 +141,14 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5.3</version>
+                    <configuration>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
