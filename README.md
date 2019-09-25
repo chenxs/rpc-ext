@@ -53,6 +53,9 @@
 
 ### 使用方式
 
+#### demo地址：
+https://github.com/chenxs/rpc-ext-demo/tree/master/rpc-ext-demo-dubbo
+
 #### api包中定义RpcInfo的使用方式
 1.在api根包下添加cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo注解
 
@@ -117,6 +120,9 @@ import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
 ### 相对dubbo的优势
 1.将服务提供者和服务引用者当作普通的spring bean直接通过spring的注解来服务服务和服务引用.
 2.支持一个服务提供者实现多个@RpcApi接口并一次性注册到注册中心
+
+#### demo地址：
+https://github.com/chenxs/rpc-ext-demo/tree/master/rpc-ext-demo-unity-dubbo
 
 ### 使用方式
 1.在服务定义的api接口类上加上@RpcApi注解,并添加rpc服务配置信息如：
