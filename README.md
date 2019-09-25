@@ -102,6 +102,8 @@ import cn.hill4j.rpcext.core.rpcext.dubbo.annotation.RpcInfo;
 
 ![noRpcInfoConfig2](./readme/img/noRpcInfoConfig2.png "noRpcInfoConfig2")
 
+---
+
 ## rpc服务服务端客户端统一配置
 
 ### 解决问题
