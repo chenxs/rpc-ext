@@ -90,6 +90,31 @@ public class ReflectUtils {
      * @return 执行方法的返回结果
      */
     public static Object invokeMethod(Object bean,String methodName,Class[] paramsTypes,Object... params) {
+
+        if (bean != null){
+            Method method = getMethod(bean, methodName, paramsTypes);
+            if (method == null){
+                throw new ReflectException(String.format("method[%s.%s] no found,paramsTypes:(%s)",bean.getClass().getName(),methodName, JSONObject.toJSONString(paramsTypes)));
+            }
+            try {
+                return method.invoke(bean,params);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new ReflectException("invokeMethod error",e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 通过反射执行指定类的指定方法，即使是使用方法也是可以执行
+     * 如果bean 为空则返回null,
+     * 如果需要执行的方法不能找到则抛出异常com.hill.rpc.ext.core.utils.exception.ReflectException
+     * @param bean bean对象
+     * @param methodName 方法名
+     * @param paramsTypes 方法入参类型数组
+     * @return 执行方法的返回结果
+     */
+    public static Method getMethod(Object bean,String methodName,Class... paramsTypes) {
         if (bean != null){
             Method method ;
             if (paramsTypes == null || paramsTypes.length == 0){
@@ -97,15 +122,11 @@ public class ReflectUtils {
             }else {
                 method = ReflectionUtils.findMethod(bean.getClass(),methodName,paramsTypes);
             }
-            if (method == null){
-                throw new ReflectException(String.format("method[%s.%s] no found,paramsTypes:(%s)",bean.getClass().getName(),methodName, JSONObject.toJSONString(paramsTypes)));
+            if (method != null){
+                method.setAccessible(true);
             }
-            method.setAccessible(true);
-            try {
-                return method.invoke(bean,params);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new ReflectException("invokeMethod error",e);
-            }
+
+            return method;
         }
         return null;
     }

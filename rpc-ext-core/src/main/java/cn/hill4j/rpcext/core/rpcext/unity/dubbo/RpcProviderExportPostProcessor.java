@@ -10,6 +10,7 @@ import cn.hill4j.rpcext.core.utils.ReflectUtils;
 import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.config.*;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.dubbo.config.spring.AnnotationBean;
 import com.alibaba.dubbo.config.spring.ServiceBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.validation.constraints.NotNull;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +43,10 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
     private Set<String> basePackages = new HashSet<>();
     private Set<String> excludedAppNames = new HashSet<>();
     private Set<String> excludedPackages = new HashSet<>();
+
+    private boolean dubboAnnotationBeanExport = false;
+    private Method dubboServiceBeanMatchMethod = null;
+    private AnnotationBean annotationBean = null;
 
     private ApplicationContext applicationContext;
     private final Set<ServiceConfig<?>> serviceConfigs = new ConcurrentHashSet<ServiceConfig<?>>();
@@ -65,7 +73,7 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
         if (CollectionUtils.isEmpty(interfaces)){
             return;
         }
-        Set<Class> exportInterfaceClazzs = initExportedInterfaces(beanClazz, interfaces);
+        Set<Class> exportInterfaceClazzs = initExportedInterfaces(bean,beanClazz, interfaces);
 
         for (Class interfaceClazz : interfaces){
             if (interfaceClazz.isAnnotationPresent(RpcApi.class)){
@@ -83,9 +91,9 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
      * @param interfaces bean实现的接口列表
      * @return 已经导出为服务提供者的接口列表
      */
-    private Set<Class> initExportedInterfaces(Class beanClazz, Set<Class> interfaces) {
+    private Set<Class> initExportedInterfaces(Object bean,Class beanClazz, Set<Class> interfaces) {
         Set<Class> exportInterfaceClazzs = new HashSet<>();
-        Class  dubboServiceInterface = getDubboServiceInterface(beanClazz);
+        Class  dubboServiceInterface = getDubboServiceInterface(bean,beanClazz);
         if (dubboServiceInterface != null){
             exportInterfaceClazzs.add(dubboServiceInterface);
         }
@@ -150,8 +158,21 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+        initDubboAnnotationExported(applicationContext);
     }
 
+    private void initDubboAnnotationExported (ApplicationContext applicationContext){
+        try{
+            AnnotationBean annotationBean = applicationContext.getBean(AnnotationBean.class);
+            if (annotationBean != null){
+                this.annotationBean = annotationBean;
+                dubboAnnotationBeanExport = true;
+                dubboServiceBeanMatchMethod = ReflectUtils.getMethod(annotationBean,"isMatchPackage",Object.class);
+            }
+        }catch (Exception e){
+            // no do
+        }
+    }
     private Object exportService(Object bean, Service service,Class interfaceClass)
             throws BeansException {
         if (service != null) {
@@ -227,8 +248,8 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
         this.excludedPackages = excludedPackages;
     }
 
-    private Class getDubboServiceInterface (Class beanClazz){
-        if (beanClazz.isAnnotationPresent(Service.class)){
+    private Class getDubboServiceInterface (Object bean,Class beanClazz){
+        if (beanClazz.isAnnotationPresent(Service.class) && checkDubboExport(bean)){
             Service service = (Service) beanClazz.getAnnotation(Service.class);
             if (service.interfaceClass() != null && !void.class.equals(service.interfaceClass())){
                 return service.interfaceClass();
@@ -243,5 +264,17 @@ public class RpcProviderExportPostProcessor  implements BeanPostProcessor , Disp
             }
         }
         return null;
+    }
+
+    private boolean checkDubboExport(Object bean){
+        if (annotationBean != null && dubboAnnotationBeanExport && dubboServiceBeanMatchMethod != null){
+            try {
+                Boolean matched = (Boolean)dubboServiceBeanMatchMethod.invoke(annotationBean,bean);
+                return matched ;
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                return false;
+            }
+        }
+        return false;
     }
 }

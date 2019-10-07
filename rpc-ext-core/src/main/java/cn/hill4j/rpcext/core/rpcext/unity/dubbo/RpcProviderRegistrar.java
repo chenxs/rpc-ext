@@ -20,7 +20,6 @@ import java.util.*;
 public class RpcProviderRegistrar extends RpcRegistrar implements ImportBeanDefinitionRegistrar {
     private final String rpcProviderExportBeanName = "rpcProviderExportPostProcessor";
     private final String rpcProviderLoadBeanName = "rpcProviderLoadPostProcessor";
-    private final String rpcExportBeanFactoryRestorBeanName = "rpcExportBeanFactoryRestor";
     /**
      * 校验上下文中是否有依赖dubbo
      */
@@ -49,11 +48,6 @@ public class RpcProviderRegistrar extends RpcRegistrar implements ImportBeanDefi
             if (!registry.containsBeanDefinition(rpcProviderLoadBeanName)){
                 BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(RpcProviderLoadPostProcessor.class).getBeanDefinition();
                 registry.registerBeanDefinition(rpcProviderLoadBeanName,beanDefinition);
-            }
-
-            if (!registry.containsBeanDefinition(rpcExportBeanFactoryRestorBeanName)){
-                BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(RpcExportBeanFactoryRestor.class).getBeanDefinition();
-                registry.registerBeanDefinition(rpcExportBeanFactoryRestorBeanName,beanDefinition);
             }
         }
     }
