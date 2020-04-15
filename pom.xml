@@ -25,7 +25,7 @@
         <spring-cloud.version>Finchley.RELEASE</spring-cloud.version>
         <dubbo.version>2.5.8</dubbo.version>
         <zkclient.version>0.4</zkclient.version>
-        <fastjson.version>1.2.7</fastjson.version>
+        <fastjson.version>1.2.25</fastjson.version>
         <skipTests>true</skipTests>
     </properties>
 
